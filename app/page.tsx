@@ -1,11 +1,11 @@
 "use client"
-import { Stage, Layer, Line, Rect, Circle , Arrow , Star } from "react-konva"
+import { Stage, Layer, Line, Rect, Circle , Arrow } from "react-konva"
 import { useEffect, useRef, useState } from "react"
 import 'remixicon/fonts/remixicon.css'
 import { useDispatch , useSelector } from "react-redux"
 import { RootState } from "@/store"
 import Dots from "@/Components/Dots"
-import { toggleTheme , toggleSharing } from "@/store/themeSlice"
+import { toggleTheme } from "@/store/themeSlice"
 import ContainerBox from "@/Components/ContainerBox"
 import Share from "@/Components/Share"
 import { io } from "socket.io-client"
@@ -60,7 +60,7 @@ function Konva() {
       setScreenSize(window.innerWidth < 640);
       setDimensions({
         width: window.innerWidth,
-        height: window.innerHeight,
+        height: window.innerHeight * 0.8,
       });
 
       let resizeTimer: any;
@@ -443,8 +443,8 @@ function Konva() {
            {size.width > 0  && (
         <Stage
           ref={stageRef}
-          width={window.innerWidth}
-          height={window.innerHeight - 60}
+          width={dimensions.width}
+          height={dimensions.height}
           onMouseDown={handleMouseDown}
           onMousemove={handleMouseMove}
           onMouseup={handleMouseUp}
