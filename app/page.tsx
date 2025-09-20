@@ -72,6 +72,7 @@ function Konva() {
 
   useEffect(() => {
     if(theme){
+      const theme: boolean | any  = localStorage.getItem("theme");
       setTheme(theme);
     }
   },[open , theme])
@@ -92,9 +93,6 @@ function Konva() {
       setFirst(false);
       setElements(JSON.parse(allLines));
     }
-
-    const theme: boolean | any  = localStorage.getItem("theme");
-    console.log("theme , ", theme);
     setTheme(theme);
   },[])
 
@@ -273,7 +271,7 @@ function Konva() {
         )
       }
 
-       <div className={`h-10 sm:h-14 px-5 ${sharing ? "z-0" : "z-999"} flex items-center justify-center sm:justify-between fixed top-4 w-full`}>
+       <div className={`h-10 sm:h-14 px-4 ${sharing ? "z-0" : "z-999"} flex items-center justify-center sm:justify-between fixed top-4 w-full`}>
         <div ref={coRef} className="hidden sm:block" onClick={() => setOpen(!open)}>
           <Dots isTheme={isTheme}/>
         </div>
@@ -283,7 +281,7 @@ function Konva() {
           setIsOpen(false)
           setCursor(false)
           setFirst(false)
-        }} className={`px-3 transition duration-150 ease-in py-2 rounded-xl hover:cursor-pointer ${sharing ? "z-0" : "z-999"} ${tool === "mouse" ? `${isTheme ? "bg-[#3c3b6e]" : "bg-[#E9E7FF] text-blue-700"}` : `${isTheme ? "hover:bg-[#4a497d]" : "hover:bg-[#f2f1fd] "}`}`}>{tool === "mouse" ? <i className="ri-cursor-fill"></i> : <i className="ri-cursor-line"></i>}</button>
+        }} className={`px-2 transition duration-150 ease-in py-1 rounded-xl hover:cursor-pointer ${sharing ? "z-0" : "z-999"} ${tool === "mouse" ? `${isTheme ? "bg-[#3c3b6e]" : "bg-[#E9E7FF] text-blue-700"}` : `${isTheme ? "hover:bg-[#4a497d]" : "hover:bg-[#f2f1fd] "}`}`}>{tool === "mouse" ? <i className="ri-cursor-fill"></i> : <i className="ri-cursor-line"></i>}</button>
         <button onClick={() => {
           setTool("line")
           setCursor(true)
@@ -291,7 +289,7 @@ function Konva() {
           if(!screenSize){
             setIsOpen(true)
           }
-        }} className={`px-3 py-2 transition duration-150 ease-in rounded-xl hover:cursor-pointer ${sharing ? "z-0" : "z-999"} ${tool === "line" ? `${isTheme ? "bg-[#3c3b6e]" : "bg-[#E9E7FF] text-blue-700"}` :  `${isTheme ? "hover:bg-[#4a497d]" : "hover:bg-[#f2f1fd] "}` }`}><i className="ri-pencil-line"></i></button>
+        }} className={`px-2 py-1 transition duration-150 ease-in rounded-xl hover:cursor-pointer ${sharing ? "z-0" : "z-999"} ${tool === "line" ? `${isTheme ? "bg-[#3c3b6e]" : "bg-[#E9E7FF] text-blue-700"}` :  `${isTheme ? "hover:bg-[#4a497d]" : "hover:bg-[#f2f1fd] "}` }`}><i className="ri-pencil-line"></i></button>
         <button onClick={() => {
           setTool("rect")
           setCursor(true)
@@ -299,7 +297,7 @@ function Konva() {
           if(!screenSize){
             setIsOpen(true)
           }
-        }} className={`px-3 py-2 transition duration-150 ease-in rounded-xl hover:cursor-pointer ${sharing ? "z-0" : "z-999"} ${tool === "rect" ? `${isTheme ? "bg-[#3c3b6e]" : "bg-[#E9E7FF] text-blue-700"}` :  `${isTheme ? "hover:bg-[#4a497d]" : "hover:bg-[#f2f1fd] "}`}`}>{tool === "rect" ? <i className="ri-rectangle-fill"></i> : <i className="ri-rectangle-line"></i> }</button>
+        }} className={`px-2 py-1 transition duration-150 ease-in rounded-xl hover:cursor-pointer ${sharing ? "z-0" : "z-999"} ${tool === "rect" ? `${isTheme ? "bg-[#3c3b6e]" : "bg-[#E9E7FF] text-blue-700"}` :  `${isTheme ? "hover:bg-[#4a497d]" : "hover:bg-[#f2f1fd] "}`}`}>{tool === "rect" ? <i className="ri-rectangle-fill"></i> : <i className="ri-rectangle-line"></i> }</button>
         <button onClick={() => {
           setTool("square")
           setCursor(true)
@@ -307,7 +305,7 @@ function Konva() {
           if(!screenSize){
             setIsOpen(true)
           }
-        }} className={`px-3 py-2 transition duration-150 ease-in rounded-xl hover:cursor-pointer ${tool === "square" ? `${isTheme ? "bg-[#3c3b6e]" : "bg-[#E9E7FF] text-blue-700"}` : `${isTheme ? "hover:bg-[#4a497d]" : "hover:bg-[#f2f1fd] "}` }`}>{tool === "square" ? <i className="ri-square-fill"></i> : <i className="ri-square-line"></i>}</button>
+        }} className={`px-2 py-1 transition duration-150 ease-in rounded-xl hover:cursor-pointer ${tool === "square" ? `${isTheme ? "bg-[#3c3b6e]" : "bg-[#E9E7FF] text-blue-700"}` : `${isTheme ? "hover:bg-[#4a497d]" : "hover:bg-[#f2f1fd] "}` }`}>{tool === "square" ? <i className="ri-square-fill"></i> : <i className="ri-square-line"></i>}</button>
         <button onClick={() => {
           setTool("circle")
           setCursor(true)
@@ -315,7 +313,7 @@ function Konva() {
           if(!screenSize){
             setIsOpen(true)
           }
-        }} className={`px-3 py-2 transition duration-150 ease-in rounded-xl hover:cursor-pointer ${tool === "circle" ? `${isTheme ? "bg-[#3c3b6e]" : "bg-[#E9E7FF] text-blue-700"}` : `${isTheme ? "hover:bg-[#4a497d]" : "hover:bg-[#f2f1fd] "}`}`}>{tool === "circle" ? <i className="ri-circle-fill"></i> : <i className="ri-circle-line"></i>}</button>
+        }} className={`px-2 py-1 transition duration-150 ease-in rounded-xl hover:cursor-pointer ${tool === "circle" ? `${isTheme ? "bg-[#3c3b6e]" : "bg-[#E9E7FF] text-blue-700"}` : `${isTheme ? "hover:bg-[#4a497d]" : "hover:bg-[#f2f1fd] "}`}`}>{tool === "circle" ? <i className="ri-circle-fill"></i> : <i className="ri-circle-line"></i>}</button>
         <button onClick={() => {
           setTool("arrow")
           setFirst(false)
@@ -323,7 +321,7 @@ function Konva() {
           if(!screenSize){
             setIsOpen(true)
           }
-        }} className={`px-3 py-2 transition duration-150 ease-in rounded-xl hover:cursor-pointer ${tool === "arrow" ? `${isTheme ? "bg-[#3c3b6e]" : "bg-[#E9E7FF] text-blue-700"}` : `${isTheme ? "hover:bg-[#4a497d]" : "hover:bg-[#f2f1fd] "}`}`}><i className="ri-arrow-right-line"></i></button>
+        }} className={`px-2 py-1 transition duration-150 ease-in rounded-xl hover:cursor-pointer ${tool === "arrow" ? `${isTheme ? "bg-[#3c3b6e]" : "bg-[#E9E7FF] text-blue-700"}` : `${isTheme ? "hover:bg-[#4a497d]" : "hover:bg-[#f2f1fd] "}`}`}><i className="ri-arrow-right-line"></i></button>
         {/* <button onClick={() => {
           setTool("star")
           setCursor(true)
@@ -332,21 +330,21 @@ function Konva() {
           }
         }} className={`px-3 py-2 transition duration-150 ease-in rounded-xl hover:cursor-pointer ${tool === "star" ? `${isTheme ? "bg-[#3c3b6e]" : "bg-[#E9E7FF] text-blue-700"}` : `${isTheme ? "hover:bg-[#4a497d]" : "hover:bg-[#f2f1fd] "}`}`}>{tool === "star" ? <i className="ri-star-fill"></i> : <i className="ri-star-line"></i>}</button> */}
         </div>
-        <div className={` ${sOpen ? "bg-[#00B894]" : "bg-[#6865db]"} hidden relative sm:block py-3 rounded-xl px-4 text-md hover:cursor-pointer ${theme ? "text-black" : "text-white"}`}
+        <div className={` ${sOpen ? "bg-[#00B894]" : "bg-[#6865db]"} hidden relative sm:block py-2 rounded-xl px-2 text-md hover:cursor-pointer ${theme ? "text-black" : "text-white"}`}
         onClick={() => setSharing(true)}>
           Share
           {
-            roomSize && <span className="absolute -bottom-2 -right-1 px-2 py-0.5 text-sm rounded-full bg-green-400 text-black">{roomSize}</span>
+            roomSize && <span className="absolute -bottom-2 -right-1 px-1 py-0.5 text-sm rounded-full bg-green-400 text-black">{roomSize}</span>
           }
         </div>
        </div>
 
-       <div className={`fixed ${sOpen ? "bg-[#00B894]" : "bg-[#6865db]"} sm:hidden ${theme ? "text-black" : "text-white"}  top-20 right-2 px-3 py-2 rounded-xl ${sharing ? "z-0" : "z-99"} flex items-center justify-center`}
+       <div className={`fixed ${sOpen ? "bg-[#00B894]" : "bg-[#6865db]"} sm:hidden ${theme ? "text-black" : "text-white"}  top-20 right-2 px-2 py-1 rounded-xl ${sharing ? "z-0" : "z-99"} flex items-center justify-center`}
        onClick={() => setSharing(true)}>
         <i className={`ri-share-line ${isTheme ? "text-black" : "text-white"}`}></i>
        </div>
 
-       <div className={`block fixed bottom-5 ${sharing ? "z-0" : "z-999"} rounded-md sm:hidden w-full px-5`}>
+       <div className={`block fixed bottom-5 ${sharing ? "z-0" : "z-999"} rounded-md sm:hidden w-full px-4`}>
         <div className={`p-2 flex items-center justify-between rounded-md shadow z-99 ${isTheme ? "bg-[#242329]" : "bg-white"} w-full`}>
           <div className="" ref={coRef} onClick={() => setOpen(!open)}>
             <Dots isTheme={isTheme} />
@@ -360,14 +358,14 @@ function Konva() {
             onClick={handleUndo}
             className={`p-2 hover:cursor-pointer ${elements.length === 0 
       ? " text-gray-400 cursor-not-allowed" 
-      : " hover:bg-gray-100"}`}
+      : ""}`}
             ><i className="ri-corner-up-left-line text-md disabled:text-gray-300"></i></button>
             <button 
             disabled={redoStack.length === 0}
             onClick={handleRedo}
             className={`p-2 hover:cursor-pointer ${redoStack.length === 0 
       ? " text-gray-400 cursor-not-allowed" 
-      : " hover:bg-gray-100"}`}
+      : ""}`}
             ><i className="ri-corner-up-right-line text-md disabled:text-gray-300"></i></button>
           </div>
         </div>
@@ -379,14 +377,14 @@ function Konva() {
           onClick={handleUndo}
           className={`p-2 hover:cursor-pointer ${elements.length === 0 
       ? " text-gray-400 cursor-not-allowed" 
-      : "bg-white hover:bg-gray-100"}`}
+      : ""}`}
           ><i className="ri-corner-up-left-line text-lg disabled:text-gray-300"></i></button>
          <button 
           disabled={redoStack.length === 0}
           onClick={handleRedo}
           className={`p-2 hover:cursor-pointer ${redoStack.length === 0 
       ? " text-gray-400 cursor-not-allowed" 
-      : "bg-white hover:bg-gray-100"}`}
+      : ""}`}
          ><i className="ri-corner-up-right-line text-lg disabled:text-gray-300"></i></button>
        </div>
 
@@ -411,11 +409,11 @@ function Konva() {
                <div className="flex items-center justify-between w-full">
               <h2 className="text-md">Theme</h2>
               <div className="flex gap-1">
-                <span className={`${theme ? "" : "bg-[#6865db] text-white"} rounded-xl px-3 py-2 hover:cursor-pointer flex items-center justify-center`} onClick={() => {
+                <span className={`${theme ? "" : "bg-[#6865db] text-white"} rounded-xl px-2 py-1 hover:cursor-pointer flex items-center justify-center`} onClick={() => {
                   dispatch(toggleTheme(false))
                   setTheme(false)
                   }}><i className="ri-sun-line"></i></span>
-                <span className={`${theme ? "bg-[#6865db]" : ""} rounded-xl px-3 py-2 hover:cursor-pointer flex items-center justify-center`} onClick={() => {
+                <span className={`${theme ? "bg-[#6865db]" : ""} rounded-xl px-2 py-1 hover:cursor-pointer flex items-center justify-center`} onClick={() => {
                   dispatch(toggleTheme(true))
                   setTheme(true)
                 }}><i className="ri-moon-line"></i></span>

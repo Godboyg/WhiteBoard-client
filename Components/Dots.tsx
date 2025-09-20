@@ -9,7 +9,7 @@ type props = {
 function Dots({ isTheme }: props) {
 
   return (
-    <div className={`${isTheme ? "bg-[#242329]" : "bg-[#ececf4]"} hover:cursor-pointer flex items-center rounded-lg w-8 sm:w-11 py-2.5 px-1.5 sm:p-4 flex-col justify-center gap-[3px]`}>
+    <div className={`${isTheme ? "bg-[#242329]" : "bg-[#ececf4]"} hover:cursor-pointer flex items-center rounded-lg w-8 sm:w-11 py-2 px-1 sm:p-3 flex-col justify-center gap-[3px]`}>
       <span className={`w-3 sm:w-3.5 h-0.5 ${isTheme ? "bg-white" : "bg-black"}`}></span>
       <span className={`w-3 sm:w-3.5 h-0.5 ${isTheme ? "bg-white" : "bg-black"}`}></span>
       <span className={`w-3 sm:w-3.5 h-0.5 ${isTheme ? "bg-white" : "bg-black"}`}></span>
