@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Socket } from 'socket.io-client';
-import { useDispatch, UseDispatch , useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 // import { toggleSharing } from '@/store/themeSlice';
 import { RootState } from '@/store';
 

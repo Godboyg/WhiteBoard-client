@@ -56,3 +56,7 @@
 .scrollbar-hide-x::-webkit-scrollbar {
   height: 0 !important; 
 }
+
+canvas {
+  touch-action: none; /* prevents default scrolling and pinch-zoom */
+}

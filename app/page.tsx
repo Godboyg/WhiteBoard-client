@@ -12,6 +12,7 @@ import { io } from "socket.io-client"
 import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast"
 import FistPage from "@/Components/FistPage"
+import Konva from "konva"
 
 const socket = io("http://localhost:4000")
 
@@ -20,7 +21,7 @@ function Konva() {
   const [elements, setElements] = useState<any[]>([])
   const [redoStack, setRedoStack] = useState<any[]>([]);
   const [open , setOpen] = useState(false);
-  const stageRef = useRef<any>(null)
+  const stageRef = useRef<Konva.Stage>(null)
   const [isTheme , setTheme] = useState(false)
   const [first , setFirst] = useState(true);
   const [stroke , setStroke] = useState(4)
@@ -43,6 +44,25 @@ function Konva() {
     width: window.innerWidth,
     height: window.innerHeight,
   });
+
+  const canvasSize = { width: 2000, height: 2000 }; 
+  const [stageScale, setStageScale] = useState(1);
+  const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
+
+  const [isPanning, setIsPanning] = useState(false);
+  const [lastPanPos, setLastPanPos] = useState({ x: 0, y: 0 });
+
+  const getPointerPos = () => {
+    const stage = stageRef.current;
+    if (!stage) return null;
+    const pointer = stage.getPointerPosition();
+    if (!pointer) return null;
+
+    return {
+      x: (pointer.x - stage.x()) / stage.scaleX(),
+      y: (pointer.y - stage.y()) / stage.scaleY(),
+    };
+  };
 
   useEffect(() => {
     const handleClick = (e: Event) => {
@@ -154,69 +174,96 @@ function Konva() {
   },[])
 
   const handleMouseDown = (e: any) => {
+    if (e.evt.button !== 0) return;
+    const touches = e.evt instanceof TouchEvent ? e.evt.touches : null;
     isDrawing.current = true
-    const pos = e.target.getStage().getPointerPosition()
+    const stage: any = stageRef.current;
+    const pointer = e.target.getStage().getPointerPosition()
+    const x = (pointer.x - stage.x()) / stage.scaleX();
+    const y = (pointer.y - stage.y()) / stage.scaleY();
 
-    let newElement: any
+    if (!touches || touches.length === 1) {
+      let newElement: any
     if(tool === "mouse"){
       // newElement = { type : "mouse"}
       return
     } else if (tool === "line") {
-      newElement = { type: "line", points: [pos.x, pos.y] , strokeWidth : stroke , Opacity : opacity , lineColor: lineColor}
+      newElement = { type: "line", points: [x, y] , strokeWidth : stroke , Opacity : opacity , lineColor: lineColor}
     } else if (tool === "rect" || tool === "square") {
-      newElement = { type: "rect", x: pos.x, y: pos.y, width: 0, height: 0  , strokeWidth : stroke , Opacity : opacity , lineColor: lineColor}
+      newElement = { type: "rect", x: x, y: y, width: 0, height: 0  , strokeWidth : stroke , Opacity : opacity , lineColor: lineColor}
     } else if (tool === "circle") {
-      newElement = { type: "circle", x: pos.x, y: pos.y, radius: 0 , strokeWidth : stroke , Opacity : opacity , lineColor: lineColor}
+      newElement = { type: "circle", x: x, y: y, radius: 0 , strokeWidth : stroke , Opacity : opacity , lineColor: lineColor}
     } else if(tool === "arrow"){
       newElement = {
         type: "arrow",
-        x: pos.x,
-        y: pos.y,
+        x: x,
+        y: y,
         points: [0, 0],
         strokeWidth: stroke/2,
         Opacity : opacity,
         lineColor : lineColor,
       };
     } else if(tool === "star"){
-      newElement = { type: "star", x: pos.x, y: pos.y, innerRadius: 0, outerRadius: 0, strokeWidth: stroke, Opacity: opacity, lineColor };
+      newElement = { type: "star", x: x, y: y, innerRadius: 0, outerRadius: 0, strokeWidth: stroke, Opacity: opacity, lineColor };
     }
 
     setElements([...elements, newElement]);
+    }
+
+    if (touches && touches.length === 2) {
+      e.evt.preventDefault();
+      setIsPanning(true);
+      setLastPanPos({ x: touches[0].clientX, y: touches[0].clientY });
+    }
   }
 
   const handleMouseMove = (e: any) => {
     if (!isDrawing.current) return
+    const touches = e.evt instanceof TouchEvent ? e.evt.touches : null;
     const stage = e.target.getStage()
-    const point = stage.getPointerPosition()
+    const pointer = stage.getPointerPosition()
     const updated = [...elements]
     const current = updated[updated.length - 1]
+    const x = (pointer.x - stage.x()) / stage.scaleX();
+    const y = (pointer.y - stage.y()) / stage.scaleY();
 
-    if (tool === "line") {
-      current.points = current.points.concat([point.x + 2, point.y + 2])
+    if (isDrawing && (!touches || touches.length === 1)) {
+      if (tool === "line") {
+      current.points = current.points.concat([x + 2, y + 2])
     } else if (tool === "rect" || tool === "square") {
-      const w = point.x - current.x
-      const h = point.y - current.y
+      const w = x - current.x
+      const h = y - current.y
       current.width = tool === "square" ? Math.min(w, h) : w
       current.height = tool === "square" ? Math.min(w, h) : h
     } else if (tool === "circle") {
-      const dx = point.x - current.x
-      const dy = point.y - current.y
+      const dx = x - current.x
+      const dy = y - current.y
       current.radius = Math.sqrt(dx * dx + dy * dy)
     } else if(tool === "arrow"){
-      current.points = [0, 0, point.x - current.x, point.y - current.y];
+      current.points = [0, 0, x - current.x, y - current.y];
     } else if (tool === "star") {
-      const dx = point.x - (current.x || 0);
-      const dy = point.y - (current.y || 0);
+      const dx = x - (current.x || 0);
+      const dy = y - (current.y || 0);
       const outerRadius = Math.sqrt(dx * dx + dy * dy);
       current.outerRadius = outerRadius;
       current.innerRadius = outerRadius / 2;
     }
 
     setElements(updated)
+    }
+
+    if (isPanning && touches && touches.length === 2) {
+      e.evt.preventDefault();
+      const dx = touches[0].clientX - lastPanPos.x;
+      const dy = touches[0].clientY - lastPanPos.y;
+      setStagePos({ x: stagePos.x + dx, y: stagePos.y + dy });
+      setLastPanPos({ x: touches[0].clientX, y: touches[0].clientY });
+    }
   }
 
   const handleMouseUp = () => {
     isDrawing.current = false
+    setIsPanning(false);
     const last = elements[elements.length - 1]
     console.log("elements",JSON.stringify(elements));
     localStorage.setItem("lines", JSON.stringify(elements));
@@ -226,6 +273,39 @@ function Konva() {
       setTool("line")
     }
   }
+
+  const handleWheel = (e: Konva.KonvaEventObject<WheelEvent>) => {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    // Optional: only zoom with ctrl key on desktop
+    // if (!e.evt.ctrlKey) return;
+
+    const oldScale = stage.scaleX();
+    const pointer = stage.getPointerPosition();
+    if (!pointer) return;
+
+    const scaleBy = 1.05;
+    const newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
+
+    const mousePointTo = {
+      x: (pointer.x - stage.x()) / oldScale,
+      y: (pointer.y - stage.y()) / oldScale,
+    };
+
+    const newX = pointer.x - mousePointTo.x * newScale;
+    const newY = pointer.y - mousePointTo.y * newScale;
+
+    setStageScale(newScale);
+    setStagePos({ x: newX, y: newY });
+  };
+
+  useEffect(() => {
+    const stage = stageRef.current?.getStage();
+    if (!stage) return;
+    const container = stage.container();
+    container.style.touchAction = "none"; 
+  }, []);
 
   const handleStroke = (value: number) => {
     setStroke(value);
@@ -438,20 +518,22 @@ function Konva() {
         )
        }
 
-      <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
-         <div style={{ flex: 1, overflow: "hidden" }}>
-           {size.width > 0  && (
+       {size.width > 0  && (
         <Stage
           ref={stageRef}
-          width={dimensions.width}
-          height={dimensions.height}
+          scaleX={stageScale}
+          scaleY={stageScale}
+          x={stagePos.x}
+          y={stagePos.y}
+          onWheel={handleWheel}
+          width={canvasSize.width}
+          height={canvasSize.height}
           onMouseDown={handleMouseDown}
-          onMousemove={handleMouseMove}
-          onMouseup={handleMouseUp}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
           onTouchStart={handleMouseDown}
           onTouchMove={handleMouseMove}
           onTouchEnd={handleMouseUp}
-          className="over"
         >
             <Layer>
               {elements.map((el, i) => {
@@ -543,8 +625,6 @@ function Konva() {
             </Layer>
         </Stage>
          )}
-         </div>
-      </div>
     </div>
   )
 }
