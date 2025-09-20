@@ -39,6 +39,10 @@ function Konva() {
   const isDrawing = useRef(false)
   const coRef = useRef<HTMLDivElement | null>(null)
   const conRef = useRef<HTMLDivElement | null>(null);
+  const [dimensions, setDimensions] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  });
 
   useEffect(() => {
     const handleClick = (e: Event) => {
@@ -52,8 +56,18 @@ function Konva() {
   },[])
 
   useEffect(() => {
-    const handleSize = () => {
+    const handleReSize = () => {
       setScreenSize(window.innerWidth < 640);
+      setDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+
+      let resizeTimer: any;
+      const debouncedResize = () => {
+       clearTimeout(resizeTimer);
+       resizeTimer = setTimeout(handleReSize, 150); 
+      };
     }
 
     if(window.innerWidth < 640){
@@ -62,7 +76,7 @@ function Konva() {
       setScreenSize(false);
     }
 
-    window.addEventListener("resize", handleSize);
+    window.addEventListener("resize", handleReSize);
   },[])
 
   console.log("screen size",screenSize);
@@ -261,7 +275,7 @@ function Konva() {
   };
 
   return (
-    <div ref={containerRef} className={`h-screen w-full ${cursor ? "cursor-crosshair" : "cursor-mouse"} ${isTheme ? "bg-black text-white" : "bg-white text-black"} overflow-x-auto scrollbar-hide-x over`}>
+    <div ref={containerRef} className={`h-full w-full ${cursor ? "cursor-crosshair" : "cursor-mouse"} ${isTheme ? "bg-black text-white" : "bg-white text-black"} overflow-x-auto scrollbar-hide-x over`}>
 
       <Toaster />
 
@@ -424,14 +438,19 @@ function Konva() {
         )
        }
 
-      {size.width > 0  && (
+      <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
+         <div style={{ flex: 1, overflow: "hidden" }}>
+           {size.width > 0  && (
         <Stage
           ref={stageRef}
-          width={5000}
-          height={5000}
+          width={window.innerWidth}
+          height={window.innerHeight - 60}
           onMouseDown={handleMouseDown}
           onMousemove={handleMouseMove}
           onMouseup={handleMouseUp}
+          onTouchStart={handleMouseDown}
+          onTouchMove={handleMouseMove}
+          onTouchEnd={handleMouseUp}
           className="over"
         >
             <Layer>
@@ -523,7 +542,9 @@ function Konva() {
               })}
             </Layer>
         </Stage>
-      )}
+         )}
+         </div>
+      </div>
     </div>
   )
 }
