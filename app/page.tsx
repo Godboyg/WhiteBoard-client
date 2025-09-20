@@ -29,6 +29,7 @@ function Konva() {
   const [sharing , setSharing] = useState(false);
   const [roomId , setRoomId] = useState<string | undefined>("")
   const [roomSize , setRoomSize] = useState<number>();
+  const [drawing , setIsDrawing] = useState(false);
   const [sOpen , setSOpen] = useState(false);
   const [opacity , setOpacity] = useState<number>(1)
   const [lineColor , setLineColor] = useState("");
@@ -175,6 +176,7 @@ function Konva() {
 
   const handleMouseDown = (e: any) => {
     if (e.evt.button !== 0) return;
+    if (!isDrawing) return;
     const touches = e.evt instanceof TouchEvent ? e.evt.touches : null;
     isDrawing.current = true
     const stage: any = stageRef.current;
@@ -218,7 +220,7 @@ function Konva() {
   }
 
   const handleMouseMove = (e: any) => {
-    if (!isDrawing.current) return
+    if (!isDrawing.current) return;
     const touches = e.evt instanceof TouchEvent ? e.evt.touches : null;
     const stage = e.target.getStage()
     const pointer = stage.getPointerPosition()
@@ -365,7 +367,11 @@ function Konva() {
         )
       }
 
-       <div className={`h-10 sm:h-14 px-4 ${sharing ? "z-0" : "z-999"} flex items-center justify-center sm:justify-between fixed top-4 w-full`}>
+      <button className="fixed bottom-35 right-10 z-999 text-black  text-md hover:cursor-pointer" onClick={() => setIsDrawing((p) => !p)}>
+         {drawing ? "Switch to Pan" : "Switch to Draw"}
+      </button>
+
+       <div className={`h-10 sm:h-14 px-4 ${sharing ? "z-0" : "z-999"} flex items-center justify-center sm:justify-between fixed top-4 w-full hover:cursor-pointer`}>
         <div ref={coRef} className="hidden sm:block" onClick={() => setOpen(!open)}>
           <Dots isTheme={isTheme}/>
         </div>
@@ -424,7 +430,7 @@ function Konva() {
           }
         }} className={`px-3 py-2 transition duration-150 ease-in rounded-xl hover:cursor-pointer ${tool === "star" ? `${isTheme ? "bg-[#3c3b6e]" : "bg-[#E9E7FF] text-blue-700"}` : `${isTheme ? "hover:bg-[#4a497d]" : "hover:bg-[#f2f1fd] "}`}`}>{tool === "star" ? <i className="ri-star-fill"></i> : <i className="ri-star-line"></i>}</button> */}
         </div>
-        <div className={` ${sOpen ? "bg-[#00B894]" : "bg-[#6865db]"} hidden relative sm:block py-2 rounded-xl px-2 text-md hover:cursor-pointer ${theme ? "text-black" : "text-white"}`}
+        <div className={` ${sOpen ? "bg-[#00B894]" : "bg-[#6865db]"} hidden relative sm:block py-2 rounded-xl px-2 text-sm hover:cursor-pointer ${theme ? "text-black" : "text-white"}`}
         onClick={() => setSharing(true)}>
           Share
           {
@@ -525,6 +531,7 @@ function Konva() {
           scaleY={stageScale}
           x={stagePos.x}
           y={stagePos.y}
+          draggable={!drawing}
           onWheel={handleWheel}
           width={canvasSize.width}
           height={canvasSize.height}
@@ -534,6 +541,7 @@ function Konva() {
           onTouchStart={handleMouseDown}
           onTouchMove={handleMouseMove}
           onTouchEnd={handleMouseUp}
+          style={{ touchAction : "none" }}
         >
             <Layer>
               {elements.map((el, i) => {
