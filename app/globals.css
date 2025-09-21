@@ -56,3 +56,7 @@
 .scrollbar-hide-x::-webkit-scrollbar {
   height: 0 !important; 
 }
+
+.your-div {
+  touch-action: none; /* disables all gestures including pinch zoom */
+}

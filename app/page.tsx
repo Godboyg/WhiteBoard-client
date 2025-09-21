@@ -1,6 +1,6 @@
 "use client"
 import { Stage, Layer, Line, Rect, Circle , Arrow } from "react-konva"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import 'remixicon/fonts/remixicon.css'
 import { useDispatch , useSelector } from "react-redux"
 import { RootState } from "@/store"
@@ -13,11 +13,9 @@ import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast"
 import FistPage from "@/Components/FistPage"
 import KonvaLib from "konva"
-// import Konva from "konva"
-
-const socket = io("http://localhost:4000")
 
 function Konva() {
+  const socket = useMemo(() => io("http://localhost:4000") ,[]);
 
   const [elements, setElements] = useState<any[]>([])
   const [redoStack, setRedoStack] = useState<any[]>([]);
@@ -53,6 +51,7 @@ function Konva() {
 
   const [isPanning, setIsPanning] = useState(false);
   const [lastPanPos, setLastPanPos] = useState({ x: 0, y: 0 });
+  const pendingPoints = useRef<number[]>([]);
 
   const getPointerPos = () => {
     const stage = stageRef.current;
@@ -135,13 +134,16 @@ function Konva() {
   useEffect(() => {
     if(socket.id){
       toast.success("conected" , { duration : 1000});
+      return
     } else {
       toast.error("try again!" , {duration: 1000});
+      return
     }
     const roomId: string | undefined = window.location.hash.split("/").pop();
     let newData: any = { roomId: roomId , socket: socket.id }
     if(roomId && socket){
       socket.emit("join-session", newData);
+      return;
     }
   },[])
 
@@ -185,7 +187,7 @@ function Konva() {
     const x = (pointer.x - stage.x()) / stage.scaleX();
     const y = (pointer.y - stage.y()) / stage.scaleY();
 
-    if (!touches || touches.length === 1) {
+      console.log("dont know", touches);
       let newElement: any
     if(tool === "mouse"){
       // newElement = { type : "mouse"}
@@ -213,12 +215,12 @@ function Konva() {
     setElements([...elements, newElement]);
     }
 
-    if (touches && touches.length === 2) {
-      e.evt.preventDefault();
-      setIsPanning(true);
-      setLastPanPos({ x: touches[0].clientX, y: touches[0].clientY });
-    }
-  }
+    // if (touches && touches.length === 2) {
+    //   e.evt.preventDefault();
+    //   console.log("panning true");
+    //   setIsPanning(true);
+    //   setLastPanPos({ x: touches[0].clientX, y: touches[0].clientY });
+    // }
 
   const handleMouseMove = (e: any) => {
     if (!isDrawing.current) return;
@@ -231,6 +233,7 @@ function Konva() {
     const y = (pointer.y - stage.y()) / stage.scaleY();
 
     if (isDrawing && (!touches || touches.length === 1)) {
+      console.log("moving done!",touches);
       if (tool === "line") {
       current.points = current.points.concat([x + 2, y + 2])
     } else if (tool === "rect" || tool === "square") {
@@ -257,6 +260,7 @@ function Konva() {
 
     if (isPanning && touches && touches.length === 2) {
       e.evt.preventDefault();
+      console.log("touches",touches);
       const dx = touches[0].clientX - lastPanPos.x;
       const dy = touches[0].clientY - lastPanPos.y;
       setStagePos({ x: stagePos.x + dx, y: stagePos.y + dy });
@@ -268,13 +272,102 @@ function Konva() {
     isDrawing.current = false
     setIsPanning(false);
     const last = elements[elements.length - 1]
-    console.log("elements",JSON.stringify(elements));
     localStorage.setItem("lines", JSON.stringify(elements));
     console.log("roomid is set",roomId);
     socket.emit("line-drawing", { roomId, line: last });
     if(tool && tool !== "mouse"){
       setTool("line")
     }
+  }
+
+  useEffect(() => {
+    let anim: number;
+
+    const draw = () => {
+      if (pendingPoints.current.length > 0) {
+        setElements((prev) => {
+          const last = prev[prev.length - 1] as any;
+          if (!last || last.type !== "line") return prev;
+          const updatedLine = { ...last, points: last.points.concat(pendingPoints.current) };
+          pendingPoints.current = [];
+          return [...prev.slice(0, -1), updatedLine];
+        });
+      }
+      anim = requestAnimationFrame(draw);
+    };
+
+    anim = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(anim);
+  }, []);
+
+  const handlePointerDown = (e: any) => {
+    isDrawing.current = true;
+    const pos = e.target.getStage().getPointerPosition();
+
+    let newElement: any
+    if(tool === "mouse"){
+      // newElement = { type : "mouse"}
+      return
+    } else if (tool === "line") {
+      newElement = { type: "line", points: [pos.x, pos.y] , strokeWidth : stroke , Opacity : opacity , lineColor: lineColor}
+    } else if (tool === "rect" || tool === "square") {
+      newElement = { type: "rect", x: pos.x, y: pos.y, width: 0, height: 0  , strokeWidth : stroke , Opacity : opacity , lineColor: lineColor}
+    } else if (tool === "circle") {
+      newElement = { type: "circle", x: pos.x, y: pos.y, radius: 0 , strokeWidth : stroke , Opacity : opacity , lineColor: lineColor}
+    } else if(tool === "arrow"){
+      newElement = {
+        type: "arrow",
+        x: pos.x,
+        y: pos.y,
+        points: [0, 0],
+        strokeWidth: stroke/2,
+        Opacity : opacity,
+        lineColor : lineColor,
+      };
+    } else if(tool === "star"){
+      newElement = { type: "star", x: pos.x, y: pos.y, innerRadius: 0, outerRadius: 0, strokeWidth: stroke, Opacity: opacity, lineColor };
+    }
+
+    setElements([...elements, newElement]);
+  };
+
+  const handlePointerMove = (e: any) => {
+    if (!isDrawing.current) return;
+    const stage = stageRef.current?.getStage();
+    if(!stage) return
+    const point = stage.getPointerPosition();
+    if(!point) return
+
+    setElements((prev) => {
+      const last = { ...prev[prev.length - 1] };
+
+      if (tool === "line") {
+      last.points = last.points?.concat([point.x + 2, point.y + 2])
+    } else if (tool === "rect" || tool === "square") {
+      const w = point.x - last.x
+      const h = point.y - last.y
+      last.width = tool === "square" ? Math.min(w, h) : w
+      last.height = tool === "square" ? Math.min(w, h) : h
+    } else if (tool === "circle") {
+      const dx = point.x - last.x
+      const dy = point.y - last.y
+      last.radius = Math.sqrt(dx * dx + dy * dy)
+    } else if(tool === "arrow"){
+      last.points = [0, 0, point.x - last.x, point.y - last.y];
+    } else if (tool === "star") {
+      const dx = point.x - (last.x || 0);
+      const dy = point.y - (last.y || 0);
+      const outerRadius = Math.sqrt(dx * dx + dy * dy);
+      last.outerRadius = outerRadius;
+      last.innerRadius = outerRadius / 2;
+    }
+
+      return [...prev.slice(0, -1), last];
+    });
+  };
+
+  const handlePointerUp = () => {
+    isDrawing.current = false;
   }
 
   const handleWheel = (e: KonvaLib.KonvaEventObject<WheelEvent>) => {
@@ -372,7 +465,7 @@ function Konva() {
          {drawing ? "Switch to Pan" : "Switch to Draw"}
       </button>
 
-       <div className={`h-10 sm:h-14 px-4 ${sharing ? "z-0" : "z-999"} flex items-center justify-center sm:justify-between fixed top-4 w-full hover:cursor-pointer`}>
+       <div className={`h-10 sm:h-14 px-4 ${sharing ? "z-0" : "z-999"} your-div flex items-center justify-center sm:justify-between fixed top-4 w-full hover:cursor-pointer`}>
         <div ref={coRef} className="hidden sm:block" onClick={() => setOpen(!open)}>
           <Dots isTheme={isTheme}/>
         </div>
@@ -440,12 +533,12 @@ function Konva() {
         </div>
        </div>
 
-       <div className={`fixed ${sOpen ? "bg-[#00B894]" : "bg-[#6865db]"} sm:hidden ${theme ? "text-black" : "text-white"}  top-20 right-2 px-2 py-1 rounded-xl ${sharing ? "z-0" : "z-99"} flex items-center justify-center`}
+       <div className={`fixed ${sOpen ? "bg-[#00B894]" : "bg-[#6865db]"} your-div sm:hidden ${theme ? "text-black" : "text-white"}  top-20 right-2 px-2 py-1 rounded-xl ${sharing ? "z-0" : "z-99"} flex items-center justify-center`}
        onClick={() => setSharing(true)}>
         <i className={`ri-share-line ${isTheme ? "text-black" : "text-white"}`}></i>
        </div>
 
-       <div className={`block fixed bottom-5 ${sharing ? "z-0" : "z-999"} rounded-md sm:hidden w-full px-4`}>
+       <div className={`block fixed bottom-5 ${sharing ? "z-0" : "z-999"} your-div rounded-md sm:hidden w-full px-4`}>
         <div className={`p-2 flex items-center justify-between rounded-md shadow z-99 ${isTheme ? "bg-[#242329]" : "bg-white"} w-full`}>
           <div className="" ref={coRef} onClick={() => setOpen(!open)}>
             <Dots isTheme={isTheme} />
@@ -472,7 +565,7 @@ function Konva() {
         </div>
        </div>
 
-       <div className={`hidden sm:flex rounded-xl items-center justify-center gap-2 fixed bottom-5 left-5 z-999 ${isTheme ? "bg-[#242329]" : "bg-[#ececf4]"}`}>
+       <div className={`hidden sm:flex rounded-xl your-div items-center justify-center gap-2 fixed bottom-5 left-5 z-999 ${isTheme ? "bg-[#242329]" : "bg-[#ececf4]"}`}>
          <button 
           disabled={elements.length === 0}
           onClick={handleUndo}
@@ -505,7 +598,7 @@ function Konva() {
 
        {
         open && (
-          <div ref={conRef} className={`${open ? "z-99" : "z-0"} ${screenSize ? "w-full" : ""} fixed max-sm:bottom-18 sm:top-18 rounded-xl z-99 sm:left-5 flex items-center justify-center sm:justify-start`}>
+          <div ref={conRef} className={`${open ? "z-99" : "z-0"} your-div ${screenSize ? "w-full" : ""} fixed max-sm:bottom-18 sm:top-18 rounded-xl z-99 sm:left-5 flex items-center justify-center sm:justify-start`}>
             <div className={`${isTheme ? "bg-[#242329]" : "bg-white"} p-3 rounded-md shadow w-[91%] sm:w-[27vw] md:[22vw] lg:w-[19vw] xl:w-[15vw] h-[30vh] sm:h-[40vh]`}>
                <div className="flex items-center justify-between w-full">
               <h2 className="text-md">Theme</h2>
@@ -536,12 +629,16 @@ function Konva() {
           onWheel={handleWheel}
           width={canvasSize.width}
           height={canvasSize.height}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
-          onTouchStart={handleMouseDown}
-          onTouchMove={handleMouseMove}
-          onTouchEnd={handleMouseUp}
+          // onTouchStart={handleMouseDown}
+          // onTouchMove={handleMouseMove}
+          // onTouchEnd={handleMouseUp}
+          // pixelRatio={1}  
           style={{ touchAction : "none" }}
         >
             <Layer>

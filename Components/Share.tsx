@@ -82,7 +82,7 @@ function Share({ isTheme , share , socket , isOpen}: props) {
     }
      
   return (
-    <div className='h-screen hover:cursor-pointer w-full flex absolute top-0 left-0 z-999 items-center justify-center bg-black/50'>
+    <div className='h-screen hover:cursor-pointer w-full flex fixed top-0 left-0 z-999 items-center justify-center bg-black/50'>
       <div ref={containerRef} className={`h-full sm:h-[80vh] rounded-lg shadow w-full sm:w-[75vw] md:w-[68vw] lg:w-[60vw] xl:w-[45vw] ${isTheme ? "bg-black" : "bg-white"}`}>
         <span className='text-xl absolute top-8 right-10 block sm:hidden' onClick={() => share(false)}><i className="ri-close-fill"></i></span>
         {
@@ -117,8 +117,8 @@ function Share({ isTheme , share , socket , isOpen}: props) {
                 <div className=" flex justify-center w-full">
                     <div className="flex flex-col items-center w-[80%] gap-5 mt-15 sm:mt-10">
                     <h2 className='text-purple-700 font-medium text-xl sm:text-[2.3vw] md:text-[1.8vw] lg:text-[2vw] xl:text-[1.4vw] text-center'>Live collaboration</h2>
-                    <p className='font-normal mt-2'>Invite people to collaborate on your drawing.</p>
-                    <p className='font-semibold text-center'>Don't worry, the session is end-to-end encrypted, and fully private. Not even our server can see what you draw.</p>
+                    <p className='font-normal mt-2 text-center'>Invite people to collaborate on your drawing.</p>
+                    <p className='font-normal text-center'>Don't worry, the session is end-to-end encrypted, and fully private. Not even our server can see what you draw.</p>
                     <div className={`px-5 py-4 font-semibold hover:cursor-pointer flex items-center justify-center bg-[#6865db] mt-3 w-44 h-16 rounded-xl ${isTheme ? "text-black" : "text-white"}`}
                     onClick={handleStartSession}>
                         Start Session
