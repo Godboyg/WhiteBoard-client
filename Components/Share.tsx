@@ -54,7 +54,7 @@ function Share({ isTheme , share , socket , isOpen}: props) {
             socket.emit("join-session", newData);
             setOpen(true);
             isOpen(true)
-            dispatch(toggleSharing(true));
+            // dispatch(toggleSharing(true));
 
         } else {
             history.pushState({} , "" , "/");
@@ -78,7 +78,7 @@ function Share({ isTheme , share , socket , isOpen}: props) {
         history.pushState({} , "" , "/");
         setOpen(false);
         isOpen(false);
-        dispatch(toggleSharing(false))
+        // dispatch(toggleSharing(false))
     }
      
   return (
