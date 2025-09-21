@@ -277,7 +277,7 @@ function Konva() {
     }
   }
 
-  const handleWheel = (e: Konva.KonvaEventObject<WheelEvent>) => {
+  const handleWheel = (e: KonvaLib.KonvaEventObject<WheelEvent>) => {
     const stage = stageRef.current;
     if (!stage) return;
 
