@@ -12,7 +12,8 @@ import { io } from "socket.io-client"
 import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast"
 import FistPage from "@/Components/FistPage"
-import Konva from "konva"
+import KonvaLib from "konva"
+// import Konva from "konva"
 
 const socket = io("http://localhost:4000")
 
@@ -21,7 +22,7 @@ function Konva() {
   const [elements, setElements] = useState<any[]>([])
   const [redoStack, setRedoStack] = useState<any[]>([]);
   const [open , setOpen] = useState(false);
-  const stageRef = useRef<Konva.Stage>(null)
+  const stageRef = useRef<KonvaLib.Stage>(null)
   const [isTheme , setTheme] = useState(false)
   const [first , setFirst] = useState(true);
   const [stroke , setStroke] = useState(4)
