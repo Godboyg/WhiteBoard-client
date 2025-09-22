@@ -409,8 +409,14 @@ function Konva() {
         )
       }
 
-      <button className={`fixed bottom-35 font-bold right-10 z-999 ${isTheme ? "text-white" : "text-black"} text-md hover:cursor-pointer`} onClick={() => setIsDrawing((p) => !p)}>
-         {drawing ? "Scroll" : "Draw"}
+      <button className={`fixed bottom-35 font-bold right-10 z-999 ${isTheme ? "text-white" : "text-black"} text-md hover:cursor-pointer`}>
+         {drawing ? <span onClick={() => {
+          setIsDrawing((p) => !p)
+          setTool("mouse");
+          }}>Scroll</span> : <span onClick={() => {
+            setIsDrawing((p) => !p)
+            setTool("line")
+            }}>Draw</span> }
       </button>
 
        <div className={`h-10 sm:h-14 px-4 xl:px-3 ${sharing ? "z-0" : "z-999"} your-div flex items-center justify-center sm:justify-between fixed top-4 w-full hover:cursor-pointer`}>
@@ -577,7 +583,7 @@ function Konva() {
 
        {
         isOpen && (
-          <div className={`flex ${screenSize ? "w-full" : ""} z-99 items-center justify-center sm:justify-start fixed sm:top-25 sm:left-5 max-sm:bottom-18 rounded-xl`}>
+          <div className={`flex ${screenSize ? "w-full z-9999" : "z-99"} items-center justify-center sm:justify-start fixed sm:top-25 sm:left-5 max-sm:bottom-18 rounded-xl`}>
             <ContainerBox isTheme={isTheme} strokeWidth={handleStroke} opacity={handleOpacity} LineColor={handleLineColor}/>
           </div>
         )

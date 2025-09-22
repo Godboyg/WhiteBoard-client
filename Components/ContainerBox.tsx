@@ -59,7 +59,7 @@ function ContainerBox({ isTheme , strokeWidth , opacity , LineColor} :  props) {
     }
 
   return (
-    <div className={`${isTheme ? "bg-[#242329]" : "bg-white"} z-9999 p-3 rounded-md flex flex-col justify-start gap-4 shadow w-[91%] sm:w-[25vw] md:[20vw] lg:w-[16vw] xl:w-[13vw] h-[45vh]`}>
+    <div className={`${isTheme ? "bg-[#242329]" : "bg-white"} p-3 rounded-md flex flex-col justify-start gap-4 shadow w-[91%] sm:w-[25vw] md:[20vw] lg:w-[16vw] xl:w-[13vw] h-[45vh]`}>
       <div className="flex flex-col gap-2">
         <h2 className='text-sm font-sans'>Stroke Width</h2>
         <div className="flex gap-2">
