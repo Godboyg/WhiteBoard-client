@@ -37,6 +37,11 @@ function Share({ isTheme , share , socket , isOpen}: props) {
 
     },[])
 
+    window.onload = function () {
+      console.log("Window has fully loaded!");
+     // Your code here
+    };
+
     function generateRoomId(length = 8) {
        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
        let roomId = '';

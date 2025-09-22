@@ -5,7 +5,7 @@ import 'remixicon/fonts/remixicon.css'
 import { useDispatch , useSelector } from "react-redux"
 import { RootState } from "@/store"
 import Dots from "@/Components/Dots"
-import { toggleTheme } from "@/store/themeSlice"
+import { toggleSharing, toggleTheme } from "@/store/themeSlice"
 import ContainerBox from "@/Components/ContainerBox"
 import Share from "@/Components/Share"
 import { io } from "socket.io-client"
@@ -154,8 +154,10 @@ function Konva() {
     setRoomId(roomId);
     if(roomId){
       setSOpen(true);
+      dispatch(toggleSharing(true));
     } else if(roomId === "/"){
       setSOpen(false);
+      dispatch(toggleSharing(false));
     }
   },[sharing])
 
@@ -507,7 +509,7 @@ function Konva() {
         onClick={() => setSharing(true)}>
           Share
           {
-            roomSize && <span className="absolute -bottom-2 -right-1 px-1.5 py-0.5 text-sm rounded-full bg-green-400 text-black">{roomSize}</span>
+            sOpen && <span className="absolute -bottom-2 -right-1 px-1.5 py-0.5 text-sm rounded-full bg-green-400 text-black">{roomSize}</span>
           }
           </div>
         </div>
