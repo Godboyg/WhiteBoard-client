@@ -701,19 +701,7 @@ function Konva() {
                      draggable
                      />
                   )
-                } 
-                {texts.map((t) => (
-              <Text
-                // key={t.id}
-                text={t.text}
-                x={t.x}
-                y={t.y}
-                fontSize={20}
-                fill="blue"
-                draggable
-                onDragEnd={(e) => handleDragEnd(e, t.id)}
-              />
-            ))}
+                }
                 // else if(el?.type === "star"){
                 //   <Star
                 //   key={i}
