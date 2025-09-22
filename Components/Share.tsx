@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Socket } from 'socket.io-client';
 import { useDispatch, useSelector } from 'react-redux';
-// import { toggleSharing } from '@/store/themeSlice';
+import { toggleSharing } from '@/store/themeSlice';
 import { RootState } from '@/store';
 
 type props = {
@@ -54,8 +54,7 @@ function Share({ isTheme , share , socket , isOpen}: props) {
             socket.emit("join-session", newData);
             setOpen(true);
             isOpen(true)
-            // dispatch(toggleSharing(true));
-
+            dispatch(toggleSharing(true));
         } else {
             history.pushState({} , "" , "/");
             alert("error while joinning the session");
@@ -78,7 +77,7 @@ function Share({ isTheme , share , socket , isOpen}: props) {
         history.pushState({} , "" , "/");
         setOpen(false);
         isOpen(false);
-        // dispatch(toggleSharing(false))
+        dispatch(toggleSharing(false))
     }
      
   return (

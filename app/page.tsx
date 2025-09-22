@@ -132,6 +132,7 @@ function Konva() {
   },[])
 
   useEffect(() => {
+    console.log("socket",socket.id);
     if(socket.id){
       toast.success("conected" , { duration : 1000});
       return

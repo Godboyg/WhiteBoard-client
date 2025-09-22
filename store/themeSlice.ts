@@ -21,11 +21,11 @@ const themeSlice = createSlice({
           localStorage.setItem("theme", action.payload);
         } 
     }, 
-    // toggleSharing: (state , action) => {
-    //   state.Share = action.payload;
-    // }
+    toggleSharing: (state , action) => {
+      state.Share = action.payload;
+    }
   },
 });
 
-export const { toggleTheme } = themeSlice.actions;
+export const { toggleTheme , toggleSharing } = themeSlice.actions;
 export default themeSlice.reducer;
