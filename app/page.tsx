@@ -133,13 +133,13 @@ function Konva() {
 
   useEffect(() => {
     console.log("socket",socket.id);
-    if(socket.id){
-      toast.success("conected" , { duration : 1000});
-      return
-    } else {
-      toast.error("try again!" , {duration: 1000});
-      return
-    }
+    // if(socket.id){
+    //   toast.success("conected" , { duration : 1000});
+    //   return
+    // } else {
+    //   toast.error("try again!" , {duration: 1000});
+    //   return
+    // }
     const roomId: string | undefined = window.location.hash.split("/").pop();
     let newData: any = { roomId: roomId , socket: socket.id }
     if(roomId && socket){
@@ -507,26 +507,29 @@ function Konva() {
         onClick={() => setSharing(true)}>
           Share
           {
-            roomSize && <span className="absolute -bottom-2 -right-1 px-1 py-0.5 text-sm rounded-full bg-green-400 text-black">{roomSize}</span>
+            roomSize && <span className="absolute -bottom-2 -right-1 px-1.5 py-0.5 text-sm rounded-full bg-green-400 text-black">{roomSize}</span>
           }
           </div>
         </div>
        </div>
 
-       <div className={`fixed ${sOpen ? "bg-[#00B894]" : "bg-[#6865db]"} your-div sm:hidden ${theme ? "text-black" : "text-white"}  top-20 right-2 px-2 py-1 rounded-xl ${sharing ? "z-0" : "z-99"} flex items-center justify-center`}
+       <div className={`fixed ${sOpen ? "bg-[#00B894]" : "bg-[#6865db]"} your-div sm:hidden ${theme ? "text-black" : "text-white"}  top-20 right-2 px-2.5 py-1.5 rounded-xl ${sharing ? "z-0" : "z-99"} flex items-center justify-center`}
        onClick={() => setSharing(true)}>
         <i className={`ri-share-line ${isTheme ? "text-black" : "text-white"}`}></i>
+          {
+            roomSize && <span className="absolute -bottom-2 flex items-center justify-center -right-1 w-5 h-5 rounded-full bg-green-400 text-black">{roomSize}</span>
+          }
        </div>
        <button
           disabled={elements.length === 0}
-          className={`${theme ? "text-black" : "text-white"} z-999 bg-black sm:hidden fixed top-29 right-2 block px-2 py-1 rounded-xl disabled:bg-gray-500 cursor-pointer`}
+          className={`${theme ? "text-black" : "text-white"} z-999 bg-black sm:hidden fixed top-31 right-2 block px-2.5 py-1.5 rounded-xl disabled:bg-gray-500 cursor-pointer`}
           onClick={handleDownload}
           >
             <i className="ri-file-download-fill"></i>
        </button>
        <button
           disabled={elements.length === 0}
-          className={`${theme ? "text-black" : "text-white"} z-999 bg-black sm:hidden fixed top-38 right-2 block px-2 py-1 rounded-xl disabled:bg-gray-500 cursor-pointer`}
+          className={`${theme ? "text-black" : "text-white"} z-999 bg-black sm:hidden fixed top-42 right-2 block px-2.5 py-1.5 rounded-xl disabled:bg-gray-500 cursor-pointer`}
           onClick={handleErase}
           >
             <i className="ri-eraser-fill"></i>

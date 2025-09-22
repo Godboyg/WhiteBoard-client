@@ -3,6 +3,7 @@ import { Socket } from 'socket.io-client';
 import { useDispatch, useSelector } from 'react-redux';
 import { toggleSharing } from '@/store/themeSlice';
 import { RootState } from '@/store';
+import toast from 'react-hot-toast';
 
 type props = {
     isTheme: boolean;
@@ -56,8 +57,8 @@ function Share({ isTheme , share , socket , isOpen}: props) {
             isOpen(true)
             dispatch(toggleSharing(true));
         } else {
+            toast.error("error while joinning the session", { duration: 1000 });
             history.pushState({} , "" , "/");
-            alert("error while joinning the session");
         }
     }
 
