@@ -656,8 +656,8 @@ function Konva() {
                       width={el.width}
                       height={el.height}
                       stroke={el.lineColor ? el.lineColor : isTheme ? "white" : "black"}
-                      strokeWidth={el.strokeWidth}
-                      cornerRadius={20}
+                      strokeWidth={el.strokeWidth / 2}
+                      cornerRadius={30}
                       opacity={el.Opacity}
                       draggable
                     />
@@ -671,8 +671,8 @@ function Konva() {
                       width={el.width}
                       height={el.height}
                       stroke={el.lineColor ? el.lineColor : isTheme ? "white" : "black"}
-                      strokeWidth={el.strokeWidth}
-                      cornerRadius={20}
+                      strokeWidth={el.strokeWidth / 2}
+                      cornerRadius={30}
                       opacity={el.Opacity}
                       draggable
                     />
@@ -685,7 +685,7 @@ function Konva() {
                       y={el.y}
                       radius={el.radius}
                       stroke={el.lineColor ? el.lineColor : isTheme ? "white" : "black"}
-                      strokeWidth={el.strokeWidth}
+                      strokeWidth={el.strokeWidth / 2}
                       opacity={el.Opacity}
                       draggable
                     />
@@ -701,7 +701,7 @@ function Konva() {
                      pointerWidth={10}
                      fill={el.lineColor ? el.lineColor : theme ? "white" : "black"}
                      stroke={el.lineColor ? el.lineColor : theme ? "white" : "black"}
-                     strokeWidth={el.strokeWidth}
+                     strokeWidth={el.strokeWidth / 2}
                      opacity={el.Opacity}
                      lineCap="round"
                      draggable
