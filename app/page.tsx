@@ -1,5 +1,5 @@
-"use client"
-import { Stage, Layer, Line, Rect, Circle , Arrow } from "react-konva"
+"use client" 
+import { Stage, Layer, Line, Rect, Circle , Arrow , Text} from "react-konva"
 import { useEffect, useMemo, useRef, useState } from "react"
 import 'remixicon/fonts/remixicon.css'
 import { useDispatch , useSelector } from "react-redux"
@@ -34,7 +34,7 @@ function Konva() {
   const [lineColor , setLineColor] = useState("");
   const [screenSize , setScreenSize] = useState<boolean>(false);
   const [isOpen , setIsOpen] = useState(false);
-  const [tool, setTool] = useState<"mouse" | "line" | "rect" | "circle" | "square" | "arrow" | "star">("mouse")
+  const [tool, setTool] = useState<"mouse" | "line" | "rect" | "circle" | "square" | "arrow" | "star" | "text">("mouse")
   const [size, setSize] = useState({ width: 0, height: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
   const isDrawing = useRef(false)
@@ -84,11 +84,11 @@ function Konva() {
         height: window.innerHeight * 0.8,
       });
 
-      let resizeTimer: any;
-      const debouncedResize = () => {
-       clearTimeout(resizeTimer);
-       resizeTimer = setTimeout(handleReSize, 150); 
-      };
+      // let resizeTimer: any;
+      // const debouncedResize = () => {
+      //  clearTimeout(resizeTimer);
+      //  resizeTimer = setTimeout(handleReSize, 150); 
+      // };
     }
 
     if(window.innerWidth < 640){
@@ -187,8 +187,7 @@ function Konva() {
     const x = (pointer.x - stage.x()) / stage.scaleX();
     const y = (pointer.y - stage.y()) / stage.scaleY();
 
-      console.log("dont know", touches);
-      let newElement: any
+    let newElement: any
     if(tool === "mouse"){
       // newElement = { type : "mouse"}
       return
@@ -210,7 +209,11 @@ function Konva() {
       };
     } else if(tool === "star"){
       newElement = { type: "star", x: x, y: y, innerRadius: 0, outerRadius: 0, strokeWidth: stroke, Opacity: opacity, lineColor };
-    }
+    } 
+    // else if (tool === "text") {
+    //   // newElement = { type: "text", x: x, y: y, value: "" }
+    //   setInputProps({ type: "text", x: x, y: y, value: "" });
+    // }
 
     setElements([...elements, newElement]);
     }
@@ -300,76 +303,6 @@ function Konva() {
     return () => cancelAnimationFrame(anim);
   }, []);
 
-  const handlePointerDown = (e: any) => {
-    isDrawing.current = true;
-    const pos = e.target.getStage().getPointerPosition();
-
-    let newElement: any
-    if(tool === "mouse"){
-      // newElement = { type : "mouse"}
-      return
-    } else if (tool === "line") {
-      newElement = { type: "line", points: [pos.x, pos.y] , strokeWidth : stroke , Opacity : opacity , lineColor: lineColor}
-    } else if (tool === "rect" || tool === "square") {
-      newElement = { type: "rect", x: pos.x, y: pos.y, width: 0, height: 0  , strokeWidth : stroke , Opacity : opacity , lineColor: lineColor}
-    } else if (tool === "circle") {
-      newElement = { type: "circle", x: pos.x, y: pos.y, radius: 0 , strokeWidth : stroke , Opacity : opacity , lineColor: lineColor}
-    } else if(tool === "arrow"){
-      newElement = {
-        type: "arrow",
-        x: pos.x,
-        y: pos.y,
-        points: [0, 0],
-        strokeWidth: stroke/2,
-        Opacity : opacity,
-        lineColor : lineColor,
-      };
-    } else if(tool === "star"){
-      newElement = { type: "star", x: pos.x, y: pos.y, innerRadius: 0, outerRadius: 0, strokeWidth: stroke, Opacity: opacity, lineColor };
-    }
-
-    setElements([...elements, newElement]);
-  };
-
-  const handlePointerMove = (e: any) => {
-    if (!isDrawing.current) return;
-    const stage = stageRef.current?.getStage();
-    if(!stage) return
-    const point = stage.getPointerPosition();
-    if(!point) return
-
-    setElements((prev) => {
-      const last = { ...prev[prev.length - 1] };
-
-      if (tool === "line") {
-      last.points = last.points?.concat([point.x + 2, point.y + 2])
-    } else if (tool === "rect" || tool === "square") {
-      const w = point.x - last.x
-      const h = point.y - last.y
-      last.width = tool === "square" ? Math.min(w, h) : w
-      last.height = tool === "square" ? Math.min(w, h) : h
-    } else if (tool === "circle") {
-      const dx = point.x - last.x
-      const dy = point.y - last.y
-      last.radius = Math.sqrt(dx * dx + dy * dy)
-    } else if(tool === "arrow"){
-      last.points = [0, 0, point.x - last.x, point.y - last.y];
-    } else if (tool === "star") {
-      const dx = point.x - (last.x || 0);
-      const dy = point.y - (last.y || 0);
-      const outerRadius = Math.sqrt(dx * dx + dy * dy);
-      last.outerRadius = outerRadius;
-      last.innerRadius = outerRadius / 2;
-    }
-
-      return [...prev.slice(0, -1), last];
-    });
-  };
-
-  const handlePointerUp = () => {
-    isDrawing.current = false;
-  }
-
   const handleWheel = (e: KonvaLib.KonvaEventObject<WheelEvent>) => {
     const stage = stageRef.current;
     if (!stage) return;
@@ -450,8 +383,23 @@ function Konva() {
     setElements([...elements, lineToRestore]);
   };
 
+  const handleDownload = () => {
+    if (!stageRef.current) return;
+    const uri = stageRef.current.toDataURL({ pixelRatio: 3 });
+    const link = document.createElement("a");
+    link.download = "whiteboard.png";
+    link.href = uri;
+    link.click();
+    toast.success("Downloaded successfully");
+  }
+
+  const handleErase = () => {
+    setElements([]);
+    localStorage.setItem("lines", JSON.stringify([]));
+  }
+
   return (
-    <div ref={containerRef} className={`h-full w-full ${cursor ? "cursor-crosshair" : "cursor-mouse"} ${isTheme ? "bg-black text-white" : "bg-white text-black"} overflow-x-auto scrollbar-hide-x over`}>
+    <div ref={containerRef} className={`h-full w-full relative ${cursor ? "cursor-crosshair" : "cursor-mouse"} ${isTheme ? "bg-black text-white" : "bg-white text-black"} overflow-x-auto scrollbar-hide-x over`}>
 
       <Toaster />
 
@@ -461,11 +409,11 @@ function Konva() {
         )
       }
 
-      <button className="fixed bottom-35 right-10 z-999 text-black  text-md hover:cursor-pointer" onClick={() => setIsDrawing((p) => !p)}>
-         {drawing ? "Switch to Pan" : "Switch to Draw"}
+      <button className={`fixed bottom-35 font-bold right-10 z-999 ${isTheme ? "text-white" : "text-black"} text-md hover:cursor-pointer`} onClick={() => setIsDrawing((p) => !p)}>
+         {drawing ? "Scroll" : "Draw"}
       </button>
 
-       <div className={`h-10 sm:h-14 px-4 ${sharing ? "z-0" : "z-999"} your-div flex items-center justify-center sm:justify-between fixed top-4 w-full hover:cursor-pointer`}>
+       <div className={`h-10 sm:h-14 px-4 xl:px-3 ${sharing ? "z-0" : "z-999"} your-div flex items-center justify-center sm:justify-between fixed top-4 w-full hover:cursor-pointer`}>
         <div ref={coRef} className="hidden sm:block" onClick={() => setOpen(!open)}>
           <Dots isTheme={isTheme}/>
         </div>
@@ -516,6 +464,14 @@ function Konva() {
             setIsOpen(true)
           }
         }} className={`px-2 py-1 transition duration-150 ease-in rounded-xl hover:cursor-pointer ${tool === "arrow" ? `${isTheme ? "bg-[#3c3b6e]" : "bg-[#E9E7FF] text-blue-700"}` : `${isTheme ? "hover:bg-[#4a497d]" : "hover:bg-[#f2f1fd] "}`}`}><i className="ri-arrow-right-line"></i></button>
+        <button onClick={() => {
+          setTool("text")
+          setFirst(false)
+          // setCursor(true)
+          if(!screenSize){
+            setIsOpen(true)
+          }
+        }} className={`px-2 py-1 transition duration-150 ease-in rounded-xl hover:cursor-pointer ${tool === "text" ? `${isTheme ? "bg-[#3c3b6e]" : "bg-[#E9E7FF] text-blue-700"}` : `${isTheme ? "hover:bg-[#4a497d]" : "hover:bg-[#f2f1fd] "}`}`}>T</button>
         {/* <button onClick={() => {
           setTool("star")
           setCursor(true)
@@ -524,12 +480,29 @@ function Konva() {
           }
         }} className={`px-3 py-2 transition duration-150 ease-in rounded-xl hover:cursor-pointer ${tool === "star" ? `${isTheme ? "bg-[#3c3b6e]" : "bg-[#E9E7FF] text-blue-700"}` : `${isTheme ? "hover:bg-[#4a497d]" : "hover:bg-[#f2f1fd] "}`}`}>{tool === "star" ? <i className="ri-star-fill"></i> : <i className="ri-star-line"></i>}</button> */}
         </div>
-        <div className={` ${sOpen ? "bg-[#00B894]" : "bg-[#6865db]"} hidden relative sm:block py-2 rounded-xl px-2 text-sm hover:cursor-pointer ${theme ? "text-black" : "text-white"}`}
+      
+        <div className="flex items-center gap-3">
+          <button
+          disabled={elements.length === 0}
+          className={`${theme ? "text-black" : "text-white"} bg-black hidden sm:block px-2 py-1 rounded-full disabled:bg-gray-500 cursor-pointer`}
+          onClick={handleDownload}
+          >
+            <i className="ri-file-download-fill"></i>
+          </button>
+          <button
+          disabled={elements.length === 0}
+          className={`${theme ? "text-black" : "text-white"} bg-black sm:block hidden px-2 py-1 rounded-xl disabled:bg-gray-500 cursor-pointer`}
+          onClick={handleErase}
+          >
+            <i className="ri-eraser-fill"></i>
+          </button>
+          <div className={` ${sOpen ? "bg-[#00B894]" : "bg-[#6865db]"} hidden relative sm:block py-3 rounded-xl px-3 xl:py-2.5 xl:px-2.5 text-sm hover:cursor-pointer ${theme ? "text-black" : "text-white"}`}
         onClick={() => setSharing(true)}>
           Share
           {
             roomSize && <span className="absolute -bottom-2 -right-1 px-1 py-0.5 text-sm rounded-full bg-green-400 text-black">{roomSize}</span>
           }
+          </div>
         </div>
        </div>
 
@@ -537,6 +510,20 @@ function Konva() {
        onClick={() => setSharing(true)}>
         <i className={`ri-share-line ${isTheme ? "text-black" : "text-white"}`}></i>
        </div>
+       <button
+          disabled={elements.length === 0}
+          className={`${theme ? "text-black" : "text-white"} z-999 bg-black sm:hidden fixed top-29 right-2 block px-2 py-1 rounded-xl disabled:bg-gray-500 cursor-pointer`}
+          onClick={handleDownload}
+          >
+            <i className="ri-file-download-fill"></i>
+       </button>
+       <button
+          disabled={elements.length === 0}
+          className={`${theme ? "text-black" : "text-white"} z-999 bg-black sm:hidden fixed top-38 right-2 block px-2 py-1 rounded-xl disabled:bg-gray-500 cursor-pointer`}
+          onClick={handleErase}
+          >
+            <i className="ri-eraser-fill"></i>
+       </button>
 
        <div className={`block fixed bottom-5 ${sharing ? "z-0" : "z-999"} your-div rounded-md sm:hidden w-full px-4`}>
         <div className={`p-2 flex items-center justify-between rounded-md shadow z-99 ${isTheme ? "bg-[#242329]" : "bg-white"} w-full`}>
@@ -569,17 +556,17 @@ function Konva() {
          <button 
           disabled={elements.length === 0}
           onClick={handleUndo}
-          className={`p-2 hover:cursor-pointer ${elements.length === 0 
+          className={`p-1 hover:cursor-pointer ${elements.length === 0 
       ? " text-gray-400 cursor-not-allowed" 
       : ""}`}
-          ><i className="ri-corner-up-left-line text-lg disabled:text-gray-300"></i></button>
+          ><i className="ri-corner-up-left-line text-lg xl:text-sm disabled:text-gray-300"></i></button>
          <button 
           disabled={redoStack.length === 0}
           onClick={handleRedo}
-          className={`p-2 hover:cursor-pointer ${redoStack.length === 0 
+          className={`p-1 hover:cursor-pointer ${redoStack.length === 0 
       ? " text-gray-400 cursor-not-allowed" 
       : ""}`}
-         ><i className="ri-corner-up-right-line text-lg disabled:text-gray-300"></i></button>
+         ><i className="ri-corner-up-right-line text-lg xl:text-sm disabled:text-gray-300"></i></button>
        </div>
 
        {
@@ -629,15 +616,12 @@ function Konva() {
           onWheel={handleWheel}
           width={canvasSize.width}
           height={canvasSize.height}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
-          // onTouchStart={handleMouseDown}
-          // onTouchMove={handleMouseMove}
-          // onTouchEnd={handleMouseUp}
+          onPointerDown={handleMouseDown}
+          onPointerMove={handleMouseMove}
+          onPointerUp={handleMouseUp}
           // pixelRatio={1}  
           style={{ touchAction : "none" }}
         >
@@ -654,6 +638,7 @@ function Konva() {
                       tension={0.5}
                       lineCap="round"
                       opacity={el.Opacity}
+                      draggable
                     />
                   )
                 } else if (el?.type === "rect") {
@@ -668,6 +653,7 @@ function Konva() {
                       strokeWidth={el.strokeWidth}
                       cornerRadius={20}
                       opacity={el.Opacity}
+                      draggable
                     />
                   )
                 } else if (el?.type === "square") {
@@ -682,6 +668,7 @@ function Konva() {
                       strokeWidth={el.strokeWidth}
                       cornerRadius={20}
                       opacity={el.Opacity}
+                      draggable
                     />
                   )
                 } else if (el?.type === "circle") {
@@ -694,6 +681,7 @@ function Konva() {
                       stroke={el.lineColor ? el.lineColor : isTheme ? "white" : "black"}
                       strokeWidth={el.strokeWidth}
                       opacity={el.Opacity}
+                      draggable
                     />
                   )
                 } else if(el?.type === "arrow") {
@@ -710,9 +698,22 @@ function Konva() {
                      strokeWidth={el.strokeWidth}
                      opacity={el.Opacity}
                      lineCap="round"
+                     draggable
                      />
                   )
                 } 
+                {texts.map((t) => (
+              <Text
+                // key={t.id}
+                text={t.text}
+                x={t.x}
+                y={t.y}
+                fontSize={20}
+                fill="blue"
+                draggable
+                onDragEnd={(e) => handleDragEnd(e, t.id)}
+              />
+            ))}
                 // else if(el?.type === "star"){
                 //   <Star
                 //   key={i}
@@ -731,6 +732,7 @@ function Konva() {
             </Layer>
         </Stage>
          )}
+         
     </div>
   )
 }

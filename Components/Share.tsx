@@ -83,7 +83,7 @@ function Share({ isTheme , share , socket , isOpen}: props) {
      
   return (
     <div className='h-screen hover:cursor-pointer w-full flex fixed top-0 left-0 z-999 items-center justify-center bg-black/50'>
-      <div ref={containerRef} className={`h-full sm:h-[80vh] rounded-lg shadow w-full sm:w-[75vw] md:w-[68vw] lg:w-[60vw] xl:w-[45vw] ${isTheme ? "bg-black" : "bg-white"}`}>
+      <div ref={containerRef} className={`h-full sm:h-[80vh] rounded-lg shadow w-full sm:w-[75vw] md:w-[68vw] lg:w-[60vw] xl:w-[40vw] ${isTheme ? "bg-black" : "bg-white"}`}>
         <span className='text-xl absolute top-8 right-10 block sm:hidden' onClick={() => share(false)}><i className="ri-close-fill"></i></span>
         {
             sh ? (
