@@ -37,11 +37,6 @@ function Share({ isTheme , share , socket , isOpen}: props) {
 
     },[])
 
-    window.onload = function () {
-      console.log("Window has fully loaded!");
-     // Your code here
-    };
-
     function generateRoomId(length = 8) {
        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
        let roomId = '';
@@ -99,7 +94,7 @@ function Share({ isTheme , share , socket , isOpen}: props) {
                     <div className="flex flex-col gap-3 border-b border-gray-500 h-28">
                         <h3 className='text-md'>Link</h3>
                         <div className="flex items-center justify-between">
-                            <p className='w-[50%] sm:w-[70%] overflow-auto sm:overflow-hidden h-14 px-5 rounded-lg bg-[#F5F3FF] flex items-center justify-start'>{window.location.href}</p>
+                            <p className='w-[53%] sm:w-[70%] overflow-auto sm:overflow-hidden h-14 px-5 rounded-lg bg-[#F5F3FF] flex items-center justify-start text-black'>{window.location.href}</p>
                             <p className={`hover:cursor-pointer ${isTheme ? "text-black" : "text-white"}`}
                             onClick={copyRoomLink}>{copy ? <span className='bg-green-500 rounded-xl px-6 py-4'>Copied</span> : <span className='bg-[#6865db] px-6 py-4 rounded-xl'>Copy Link</span>}</p>
                         </div>

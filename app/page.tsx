@@ -14,8 +14,10 @@ import toast from "react-hot-toast"
 import FistPage from "@/Components/FistPage"
 import KonvaLib from "konva"
 
+const socket = io("https://whiteboard-1-gaab.onrender.com");
+
 function Konva() {
-  const socket = useMemo(() => io("http://localhost:4000") ,[]);
+  // const socket = useMemo(() => io("http://localhost:4000") ,[]);
 
   const [elements, setElements] = useState<any[]>([])
   const [redoStack, setRedoStack] = useState<any[]>([]);
@@ -493,14 +495,14 @@ function Konva() {
         <div className="flex items-center gap-3">
           <button
           disabled={elements.length === 0}
-          className={`${theme ? "text-black" : "text-white"} bg-black hidden sm:block px-2 py-1 rounded-full disabled:bg-gray-500 cursor-pointer`}
+          className={`${theme ? "text-black bg-white" : "text-white bg-black"} bg-black hidden sm:block px-2 py-1 rounded-full disabled:bg-gray-500 cursor-pointer`}
           onClick={handleDownload}
           >
             <i className="ri-file-download-fill"></i>
           </button>
           <button
           disabled={elements.length === 0}
-          className={`${theme ? "text-black" : "text-white"} bg-black sm:block hidden px-2 py-1 rounded-xl disabled:bg-gray-500 cursor-pointer`}
+          className={`${theme ? "text-black bg-white" : "text-white bg-black"} bg-black sm:block hidden px-2 py-1 rounded-xl disabled:bg-gray-500 cursor-pointer`}
           onClick={handleErase}
           >
             <i className="ri-eraser-fill"></i>
@@ -519,19 +521,19 @@ function Konva() {
        onClick={() => setSharing(true)}>
         <i className={`ri-share-line ${isTheme ? "text-black" : "text-white"}`}></i>
           {
-            roomSize && <span className="absolute -bottom-2 flex items-center justify-center -right-1 w-5 h-5 rounded-full bg-green-400 text-black">{roomSize}</span>
+            sOpen && <span className="absolute -bottom-2 flex items-center justify-center -right-1 w-5 h-5 rounded-full bg-green-400 text-black">{roomSize}</span>
           }
        </div>
        <button
           disabled={elements.length === 0}
-          className={`${theme ? "text-black" : "text-white"} z-999 bg-black sm:hidden fixed top-31 right-2 block px-2.5 py-1.5 rounded-xl disabled:bg-gray-500 cursor-pointer`}
+          className={`${theme ? "text-black bg-white" : "text-white bg-black"} z-999 sm:hidden fixed top-31 right-2 block px-2.5 py-1.5 rounded-xl disabled:bg-gray-500 cursor-pointer`}
           onClick={handleDownload}
           >
             <i className="ri-file-download-fill"></i>
        </button>
        <button
           disabled={elements.length === 0}
-          className={`${theme ? "text-black" : "text-white"} z-999 bg-black sm:hidden fixed top-42 right-2 block px-2.5 py-1.5 rounded-xl disabled:bg-gray-500 cursor-pointer`}
+          className={`${theme ? "text-black bg-white" : "text-white bg-black"} z-999 bg-black sm:hidden fixed top-42 right-2 block px-2.5 py-1.5 rounded-xl disabled:bg-gray-500 cursor-pointer`}
           onClick={handleErase}
           >
             <i className="ri-eraser-fill"></i>
