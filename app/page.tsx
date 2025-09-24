@@ -13,6 +13,7 @@ import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast"
 import FistPage from "@/Components/FistPage"
 import KonvaLib from "konva"
+import { v4 as uuidv4 } from 'uuid';
 
 const socket = io("https://whiteboard-1-gaab.onrender.com");
 
@@ -42,10 +43,28 @@ function Konva() {
   const isDrawing = useRef(false)
   const coRef = useRef<HTMLDivElement | null>(null)
   const conRef = useRef<HTMLDivElement | null>(null);
-  const [dimensions, setDimensions] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight,
-  });
+  const [showMoveButton, setShowMoveButton] = useState(false);
+  const [texts, setTexts] = useState<{ x: number; y: number; text: string , id: number }[]>([
+    { x: 200, y: 150, text: "Hello", id: 1 },
+  ]);
+  const [editingId, setEditingId] = useState(null);
+  const [inputValue, setInputValue] = useState("");
+
+  const handleTextClick = (textItem: any) => {
+    setEditingId(textItem.id);
+    setInputValue(textItem.text);
+  };
+
+  const handleInputChange = (e: any) => setInputValue(e.target.value);
+
+  const handleInputBlur = () => {
+    setTexts(texts.map(t => 
+      t.id === editingId ? { ...t, text: inputValue } : t
+    ));
+    setEditingId(null);
+  };
+  
+  const editingText = texts.find(t => t.id === editingId);
 
   const canvasSize = { width: 2000, height: 2000 }; 
   const [stageScale, setStageScale] = useState(1);
@@ -54,18 +73,6 @@ function Konva() {
   const [isPanning, setIsPanning] = useState(false);
   const [lastPanPos, setLastPanPos] = useState({ x: 0, y: 0 });
   const pendingPoints = useRef<number[]>([]);
-
-  const getPointerPos = () => {
-    const stage = stageRef.current;
-    if (!stage) return null;
-    const pointer = stage.getPointerPosition();
-    if (!pointer) return null;
-
-    return {
-      x: (pointer.x - stage.x()) / stage.scaleX(),
-      y: (pointer.y - stage.y()) / stage.scaleY(),
-    };
-  };
 
   useEffect(() => {
     const handleClick = (e: Event) => {
@@ -81,10 +88,6 @@ function Konva() {
   useEffect(() => {
     const handleReSize = () => {
       setScreenSize(window.innerWidth < 640);
-      setDimensions({
-        width: window.innerWidth,
-        height: window.innerHeight * 0.8,
-      });
 
       // let resizeTimer: any;
       // const debouncedResize = () => {
@@ -134,14 +137,8 @@ function Konva() {
   },[])
 
   useEffect(() => {
+    if(!socket) return;
     console.log("socket",socket.id);
-    // if(socket.id){
-    //   toast.success("conected" , { duration : 1000});
-    //   return
-    // } else {
-    //   toast.error("try again!" , {duration: 1000});
-    //   return
-    // }
     const roomId: string | undefined = window.location.hash.split("/").pop();
     let newData: any = { roomId: roomId , socket: socket.id }
     if(roomId && socket){
@@ -214,21 +211,22 @@ function Konva() {
       };
     } else if(tool === "star"){
       newElement = { type: "star", x: x, y: y, innerRadius: 0, outerRadius: 0, strokeWidth: stroke, Opacity: opacity, lineColor };
-    } 
-    // else if (tool === "text") {
-    //   // newElement = { type: "text", x: x, y: y, value: "" }
-    //   setInputProps({ type: "text", x: x, y: y, value: "" });
-    // }
-
+    } else if(tool === "text") {
+      // newElement = { type: "text", x: x, y: y, value: "" }
+      newElement = {
+          id: uuidv4(),
+          x,
+          type: "text",
+          text: 'Double-click to edit',   // initial text
+          y,
+          fill: lineColor || "black", // text color
+          opacity: opacity || 1,
+          fontSize: 24,             // default font size
+          draggable: true,          // optional if you want text to be draggable
+       };
+    }
     setElements([...elements, newElement]);
     }
-
-    // if (touches && touches.length === 2) {
-    //   e.evt.preventDefault();
-    //   console.log("panning true");
-    //   setIsPanning(true);
-    //   setLastPanPos({ x: touches[0].clientX, y: touches[0].clientY });
-    // }
 
   const handleMouseMove = (e: any) => {
     if (!isDrawing.current) return;
@@ -261,6 +259,9 @@ function Konva() {
       const outerRadius = Math.sqrt(dx * dx + dy * dy);
       current.outerRadius = outerRadius;
       current.innerRadius = outerRadius / 2;
+    } else if(tool === "text"){
+      current.x = x;
+      current.y = y;
     }
 
     setElements(updated)
@@ -280,6 +281,7 @@ function Konva() {
     isDrawing.current = false
     setIsPanning(false);
     const last = elements[elements.length - 1]
+    console.log("last",last);
     localStorage.setItem("lines", JSON.stringify(elements));
     console.log("roomid is set",roomId);
     socket.emit("line-drawing", { roomId, line: last });
@@ -311,9 +313,6 @@ function Konva() {
   const handleWheel = (e: KonvaLib.KonvaEventObject<WheelEvent>) => {
     const stage = stageRef.current;
     if (!stage) return;
-
-    // Optional: only zoom with ctrl key on desktop
-    // if (!e.evt.ctrlKey) return;
 
     const oldScale = stage.scaleX();
     const pointer = stage.getPointerPosition();
@@ -389,14 +388,167 @@ function Konva() {
   };
 
   const handleDownload = () => {
-    if (!stageRef.current) return;
-    const uri = stageRef.current.toDataURL({ pixelRatio: 3 });
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const shapes = stage.find(".drawing");
+
+    if(shapes.length === 0) return
+
+    let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
+
+    shapes.forEach(shape => {
+      const box = shape.getClientRect({ relativeTo: stage });
+      minX = Math.min(minX, box.x);
+      minY = Math.min(minY, box.y);
+      maxX = Math.max(maxX, box.x + box.width);
+      maxY = Math.max(maxY, box.y + box.height);
+    });
+
+    const width = maxX - minX;
+    const height = maxY - minY;
+    
+    const dataURL = stage.toDataURL({
+      x: minX,
+      y: minY,
+      width,
+      height,
+      pixelRatio: 2, 
+     });
+
     const link = document.createElement("a");
     link.download = "whiteboard.png";
-    link.href = uri;
+    link.href = dataURL;
     link.click();
     toast.success("Downloaded successfully");
   }
+
+  const getShapesBoundingBox = () => {
+    const stage = stageRef.current;
+    if(!stage) return;
+    const shapes = stage.find(".drawing");
+    if (shapes.length === 0) return null;
+
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
+
+    shapes.forEach((shape) => {
+      const box = shape.getClientRect({ relativeTo: stage });
+      minX = Math.min(minX, box.x);
+      minY = Math.min(minY, box.y);
+      maxX = Math.max(maxX, box.x + box.width);
+      maxY = Math.max(maxY, box.y + box.height);
+    });
+
+    return { minX, minY, maxX, maxY };
+  };
+
+  const checkIfAway = () => {
+    const stage = stageRef.current;
+    if(!stage) return
+    const box = getShapesBoundingBox();
+    if (!box) return;
+
+    const viewX = -stage.x() / stage.scaleX();
+    const viewY = -stage.y() / stage.scaleY();
+    const viewWidth = stage.width() / stage.scaleX();
+    const viewHeight = stage.height() / stage.scaleY();
+
+    const viewBox = {
+      minX: viewX,
+      minY: viewY,
+      maxX: viewX + viewWidth,
+      maxY: viewY + viewHeight,
+    };
+
+    const isInside =
+      box.minX >= viewBox.minX &&
+      box.maxX <= viewBox.maxX &&
+      box.minY >= viewBox.minY &&
+      box.maxY <= viewBox.maxY;
+
+    setShowMoveButton(!isInside);
+  };
+
+  const handleMoveToShapes = () => {
+  const stage = stageRef.current;
+  if(!stage) return;
+  const box = getShapesBoundingBox();
+  if (!box) return;
+
+  const width = box.maxX - box.minX;
+  const height = box.maxY - box.minY;
+  
+
+  const containerWidth = stage.width();
+  const containerHeight = stage.height();
+
+  const scale = Math.min(
+    containerWidth / width,
+    containerHeight / height
+  ) * 0.6; 
+
+  const centerX = box.minX + width / 2;
+  const centerY = box.minY + height / 2;
+
+  const newX = containerWidth / 3 - centerX * scale;
+  const newY = containerHeight / 3 - centerY * scale;
+
+  stage.to({
+    scaleX: scale,
+    scaleY: scale,
+    x: newX,
+    y: newY,
+    duration: 0.1,
+    // easing: Konva.Easings.EaseInOut,
+    onFinish: checkIfAway,
+  });
+};
+  
+  useEffect(() => {
+    const stage = stageRef.current;
+    if(!stage) return;
+    stage.on("dragend", () => {
+      checkIfAway();
+    });
+
+    stage.on("wheel", (e) => {
+      e.evt.preventDefault();
+
+      const oldScale = stage.scaleX();
+      const pointer = stage.getPointerPosition();
+      if(!pointer) return
+      const scaleBy = 1.05;
+      const direction = e.evt.deltaY > 0 ? 1 : -1;
+      const newScale = direction > 0 ? oldScale / scaleBy : oldScale * scaleBy;
+
+      const mousePointTo = {
+        x: (pointer.x - stage.x()) / oldScale,
+        y: (pointer.y - stage.y()) / oldScale,
+      };
+
+      stage.scale({ x: newScale, y: newScale });
+      stage.position({
+        x: pointer.x - mousePointTo.x,
+        y: pointer.y - mousePointTo.y,
+      });
+      stage.batchDraw();
+      checkIfAway();
+    });
+
+  // initial check
+  checkIfAway();
+
+  return () => {
+    stage.off("dragend");
+    stage.off("wheel");
+  };
+  }, [checkIfAway]);
 
   const handleErase = () => {
     setElements([]);
@@ -404,9 +556,13 @@ function Konva() {
   }
 
   return (
-    <div ref={containerRef} className={`h-full w-full relative ${cursor ? "cursor-crosshair" : "cursor-mouse"} ${isTheme ? "bg-black text-white" : "bg-white text-black"} overflow-x-auto scrollbar-hide-x over`}>
+    <div ref={containerRef} className={`h-screen w-full relative ${cursor ? "cursor-crosshair" : "cursor-mouse"} ${isTheme ? "bg-black text-white" : "bg-white text-black"} overflow-x-auto scrollbar-hide-x over`}>
 
       <Toaster />
+
+      {showMoveButton && (
+        <button onClick={handleMoveToShapes} className={`absolute bottom-30 sm:bottom-10 w-full text-center text-black z-9999 hover:cursor-pointer`}>Move to Shapes</button>
+      )}
 
       {
         first && (
@@ -644,6 +800,7 @@ function Konva() {
                 if (el?.type === "line") {
                   return (
                     <Line
+                      name="drawing"
                       key={i}
                       points={el.points}
                       stroke={el.lineColor ? el.lineColor : isTheme ? "white" : "black"}
@@ -658,6 +815,7 @@ function Konva() {
                 } else if (el?.type === "rect") {
                   return (
                     <Rect
+                      name="drawing"
                       key={i}
                       x={el.x}
                       y={el.y}
@@ -673,6 +831,7 @@ function Konva() {
                 } else if (el?.type === "square") {
                   return (
                     <Rect
+                      name="drawing"
                       key={i}
                       x={el.x}
                       y={el.y}
@@ -688,6 +847,7 @@ function Konva() {
                 } else if (el?.type === "circle") {
                   return (
                     <Circle
+                      name="drawing"
                       key={i}
                       x={el.x}
                       y={el.y}
@@ -701,6 +861,7 @@ function Konva() {
                 } else if(el?.type === "arrow") {
                   return (
                     <Arrow
+                     name="drawing"
                      key={i}
                      x={el.x}
                      y={el.y}
@@ -715,9 +876,23 @@ function Konva() {
                      draggable
                      />
                   )
-                }
+                } 
+                // else if(el?.type === "text"){
+                //   return (
+                //     <Text 
+                //     key={i}
+                //     x={el.x}
+                //     y={el.y}
+                //     text={el.text}
+                //     fontSize={24}
+                //     draggable
+                //     fill={el.lineColor ? el.lineColor : theme ? "white" : "black"}
+                //     />
+                //   )
+                // }
                 // else if(el?.type === "star"){
                 //   <Star
+                //   name="drawing"
                 //   key={i}
                 //   x={el.x}
                 //   y={el.y}
