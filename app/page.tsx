@@ -50,22 +50,6 @@ function Konva() {
   const [editingId, setEditingId] = useState(null);
   const [inputValue, setInputValue] = useState("");
 
-  const handleTextClick = (textItem: any) => {
-    setEditingId(textItem.id);
-    setInputValue(textItem.text);
-  };
-
-  const handleInputChange = (e: any) => setInputValue(e.target.value);
-
-  const handleInputBlur = () => {
-    setTexts(texts.map(t => 
-      t.id === editingId ? { ...t, text: inputValue } : t
-    ));
-    setEditingId(null);
-  };
-  
-  const editingText = texts.find(t => t.id === editingId);
-
   const canvasSize = { width: 2000, height: 2000 }; 
   const [stageScale, setStageScale] = useState(1);
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
@@ -130,7 +114,7 @@ function Konva() {
   useEffect(() => {
     const allLines: any = localStorage.getItem("lines");
     if(allLines){
-      setFirst(false);
+      // setFirst(false);
       setElements(JSON.parse(allLines));
     }
     setTheme(theme);
@@ -483,18 +467,28 @@ function Konva() {
 
   const width = box.maxX - box.minX;
   const height = box.maxY - box.minY;
-  
 
   const containerWidth = stage.width();
   const containerHeight = stage.height();
 
-  const scale = Math.min(
-    containerWidth / width,
-    containerHeight / height
-  ) * 0.6; 
+  if(screenSize){
+    var scale = Math.max(
+      containerWidth / width,
+      containerHeight / height
+    ) * 0.3; 
 
-  const centerX = box.minX + width / 2;
-  const centerY = box.minY + height / 2;
+    var centerX = box.minX + width / 1.1;
+    var centerY = box.minY + height / 0.9;
+  } else {
+    console.log("laptop");
+    var scale = Math.max(
+     containerWidth / width,
+     containerHeight / height
+    ) * 0.3; 
+
+    var centerX = box.minX + width / 2;
+    var centerY = box.minY + height / 1.05;
+  }
 
   const newX = containerWidth / 3 - centerX * scale;
   const newY = containerHeight / 3 - centerY * scale;
@@ -561,7 +555,9 @@ function Konva() {
       <Toaster />
 
       {showMoveButton && (
-        <button onClick={handleMoveToShapes} className={`absolute bottom-30 sm:bottom-10 w-full text-center text-black z-9999 hover:cursor-pointer`}>Move to Shapes</button>
+        <div className="w-full flex items-center justify-center">
+        <button onClick={handleMoveToShapes} className={`fixed bottom-33 sm:bottom-10 text-center text-black z-9999 hover:cursor-pointer`}>Move to Shapes</button>
+        </div>
       )}
 
       {
@@ -877,19 +873,27 @@ function Konva() {
                      />
                   )
                 } 
-                // else if(el?.type === "text"){
-                //   return (
-                //     <Text 
-                //     key={i}
-                //     x={el.x}
-                //     y={el.y}
-                //     text={el.text}
-                //     fontSize={24}
-                //     draggable
-                //     fill={el.lineColor ? el.lineColor : theme ? "white" : "black"}
-                //     />
-                //   )
-                // }
+                else if(el?.type === "text"){
+                  return (
+                    <Text 
+                    key={i}
+                    x={el.x}
+                    y={el.y}
+                    text={el.text}
+                    fontSize={24}
+                    draggable
+                    fill={el.lineColor ? el.lineColor : theme ? "white" : "black"}
+                    onDblClick={
+                      () => {
+                        alert("b");
+                        return(
+                          <input type="text" placeholder="type me." value={"hello bro"} className="bg-black text-white z-99999" />
+                        )
+                      }
+                    }
+                    />
+                  )
+                }
                 // else if(el?.type === "star"){
                 //   <Star
                 //   name="drawing"
