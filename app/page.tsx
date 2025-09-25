@@ -1,5 +1,5 @@
 "use client" 
-import { Stage, Layer, Line, Rect, Circle , Arrow , Text} from "react-konva"
+import { Stage, Layer, Line, Rect, Circle , Arrow , Text , Transformer} from "react-konva"
 import { useEffect, useMemo, useRef, useState } from "react"
 import 'remixicon/fonts/remixicon.css'
 import { useDispatch , useSelector } from "react-redux"
@@ -17,8 +17,20 @@ import { v4 as uuidv4 } from 'uuid';
 
 const socket = io("https://whiteboard-1-gaab.onrender.com");
 
+interface TextItem {
+  id: number;
+  x: number;
+  y: number;
+  text: string;
+  fontSize: number;
+}
+
 function Konva() {
   // const socket = useMemo(() => io("http://localhost:4000") ,[]);
+
+  const [texts, setTexts] = useState<TextItem[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const transformerRef = useRef<KonvaLib.Transformer>(null);
 
   const [elements, setElements] = useState<any[]>([])
   const [redoStack, setRedoStack] = useState<any[]>([]);
@@ -44,11 +56,12 @@ function Konva() {
   const coRef = useRef<HTMLDivElement | null>(null)
   const conRef = useRef<HTMLDivElement | null>(null);
   const [showMoveButton, setShowMoveButton] = useState(false);
-  const [texts, setTexts] = useState<{ x: number; y: number; text: string , id: number }[]>([
-    { x: 200, y: 150, text: "Hello", id: 1 },
-  ]);
-  const [editingId, setEditingId] = useState(null);
-  const [inputValue, setInputValue] = useState("");
+  const [inputProps, setInputProps] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    value: string;
+  }>({ visible: false, x: 0, y: 0, value: "" });
 
   const canvasSize = { width: 2000, height: 2000 }; 
   const [stageScale, setStageScale] = useState(1);
@@ -57,6 +70,17 @@ function Konva() {
   const [isPanning, setIsPanning] = useState(false);
   const [lastPanPos, setLastPanPos] = useState({ x: 0, y: 0 });
   const pendingPoints = useRef<number[]>([]);
+  
+   useEffect(() => {
+    if (transformerRef.current && selectedId !== null) {
+      const stage = transformerRef.current.getStage();
+      const selectedNode = stage?.findOne(`#${selectedId}`);
+      if (selectedNode) {
+        transformerRef.current.nodes([selectedNode]);
+        transformerRef.current.getLayer()?.batchDraw();
+      }
+    }
+  }, [selectedId, elements]);
 
   useEffect(() => {
     const handleClick = (e: Event) => {
@@ -163,7 +187,66 @@ function Konva() {
 
   },[])
 
+  const handleStageDblClick = (e: KonvaLib.KonvaEventObject<MouseEvent>) => {
+    if (tool === "mouse") {
+      console.log("double click");
+      const stage = e.target.getStage();
+      if (e.target !== stage) return;
+      const pointer = stage?.getPointerPosition();
+      if (!pointer) return;
+
+      const { x, y } = pointer;
+      setInputProps({ visible: true, x, y, value: "" });
+      setSelectedId(null);
+    }
+  };
+
+  const handleTextDblClick = (el: any) => {
+    if (el.type === "text") {
+      setInputProps({
+        visible: true,
+        x: el.x,
+        y: el.y,
+        value: el.text || "",
+      });
+      setSelectedId(el.id);
+    }
+  };
+
+  const handleInputSubmit = () => {
+    if (inputProps.value.trim() !== "") {
+      if (selectedId) {
+        setElements((prev) =>
+          prev.map((el) => {
+            if (!el) return el;
+            if (el.type === "text" && el.id === selectedId) {
+             return { ...el, text: inputProps.value };
+            }
+            return el;
+      })
+        );
+      } else {
+        let newElement: any
+        newElement= {
+          id: Date.now(),
+          type: "text",
+          x: inputProps.x,
+          y: inputProps.y,
+          text: inputProps.value,
+          fontSize: 20,
+        };
+        setElements([...elements , newElement]);
+      }
+    }
+    setInputProps({ ...inputProps, visible: false, value: "" });
+  };
+
   const handleMouseDown = (e: any) => {
+    if (e.target === e.target.getStage()) {
+          setSelectedId(null);
+    } else {
+          setSelectedId(e.target.id());
+    }
     if (e.evt.button !== 0) return;
     if (!isDrawing) return;
     const touches = e.evt instanceof TouchEvent ? e.evt.touches : null;
@@ -195,20 +278,19 @@ function Konva() {
       };
     } else if(tool === "star"){
       newElement = { type: "star", x: x, y: y, innerRadius: 0, outerRadius: 0, strokeWidth: stroke, Opacity: opacity, lineColor };
-    } else if(tool === "text") {
-      // newElement = { type: "text", x: x, y: y, value: "" }
-      newElement = {
-          id: uuidv4(),
-          x,
-          type: "text",
-          text: 'Double-click to edit',   // initial text
-          y,
-          fill: lineColor || "black", // text color
-          opacity: opacity || 1,
-          fontSize: 24,             // default font size
-          draggable: true,          // optional if you want text to be draggable
-       };
-    }
+    } 
+    // else if (tool === "text") {
+    //    const textValue = prompt("Enter text:");
+    //    newElement = {
+    //     id: Date.now(),
+    //     type: "text",
+    //     x,
+    //     y,
+    //     text: textValue,
+    //     fontSize: 20,
+    //   };
+    // }
+
     setElements([...elements, newElement]);
     }
 
@@ -484,7 +566,7 @@ function Konva() {
     var scale = Math.max(
      containerWidth / width,
      containerHeight / height
-    ) * 0.3; 
+    ) * 2; 
 
     var centerX = box.minX + width / 2;
     var centerY = box.minY + height / 1.05;
@@ -771,6 +853,29 @@ function Konva() {
         )
        }
 
+       {inputProps.visible && (
+        <input
+          autoFocus
+          style={{
+            position: "absolute",
+            top: inputProps.y,
+            left: inputProps.x,
+            fontSize: "16px",
+          }}
+          value={inputProps.value}
+          className="z-9999 hover:cursor-text p-2 border-none outline-none"
+          onChange={(e) =>
+            setInputProps((prev) => ({ ...prev, value: e.target.value }))
+          }
+          onBlur={handleInputSubmit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleInputSubmit();
+            }
+          }}
+        />
+      )}
+
        {size.width > 0  && (
         <Stage
           ref={stageRef}
@@ -788,6 +893,7 @@ function Konva() {
           onPointerDown={handleMouseDown}
           onPointerMove={handleMouseMove}
           onPointerUp={handleMouseUp}
+          onDblClick={handleStageDblClick}
           // pixelRatio={1}  
           style={{ touchAction : "none" }}
         >
@@ -872,44 +978,34 @@ function Konva() {
                      draggable
                      />
                   )
-                } 
-                else if(el?.type === "text"){
+                } else if(el?.type === "text"){
                   return (
-                    <Text 
-                    key={i}
-                    x={el.x}
-                    y={el.y}
-                    text={el.text}
-                    fontSize={24}
-                    draggable
-                    fill={el.lineColor ? el.lineColor : theme ? "white" : "black"}
-                    onDblClick={
-                      () => {
-                        alert("b");
-                        return(
-                          <input type="text" placeholder="type me." value={"hello bro"} className="bg-black text-white z-99999" />
-                        )
-                      }
-                    }
-                    />
+                     <Text
+                       key={el.id}
+                       id={el.id.toString()}
+                       x={el.x}
+                       y={el.y}
+                       text={el.text}
+                       fontSize={20}
+                       draggable
+                       onClick={() => setSelectedId(el.id)}
+                       onTap={() => setSelectedId(el.id)}
+                       onDblClick={() => handleTextDblClick(el)}
+                       onDblTap={() => handleTextDblClick(el)}
+                     />
                   )
                 }
-                // else if(el?.type === "star"){
-                //   <Star
-                //   name="drawing"
-                //   key={i}
-                //   x={el.x}
-                //   y={el.y}
-                //   numPoints={el.numPoints}
-                //   innerRadius={el.innerRadius}
-                //   outerRadius={el.outerRadius}
-                //   stroke={el.lineColor ? el.lineColor : theme ? "white" : "black"}
-                //   strokeWidth={el.strokeWidth}
-                //   opacity={el.Opacity}
-                //   fill={undefined}
-                // />
-                // }
               })}
+
+              <Transformer
+      ref={transformerRef}
+      rotateEnabled={false}
+      enabledAnchors={["middle-left", "middle-right"]}
+      boundBoxFunc={(oldBox, newBox) => {
+        newBox.height = oldBox.height;
+        return newBox;
+      }}
+    />
             </Layer>
         </Stage>
          )}
