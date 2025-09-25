@@ -13,7 +13,6 @@ import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast"
 import FistPage from "@/Components/FistPage"
 import KonvaLib from "konva"
-import { v4 as uuidv4 } from 'uuid';
 
 const socket = io("https://whiteboard-1-gaab.onrender.com");
 
@@ -138,7 +137,7 @@ function Konva() {
   useEffect(() => {
     const allLines: any = localStorage.getItem("lines");
     if(allLines){
-      // setFirst(false);
+      setFirst(false);
       setElements(JSON.parse(allLines));
     }
     setTheme(theme);
@@ -557,7 +556,7 @@ function Konva() {
     var scale = Math.max(
       containerWidth / width,
       containerHeight / height
-    ) * 0.3; 
+    ) * 0.1; 
 
     var centerX = box.minX + width / 1.1;
     var centerY = box.minY + height / 0.9;
@@ -566,7 +565,7 @@ function Konva() {
     var scale = Math.max(
      containerWidth / width,
      containerHeight / height
-    ) * 2; 
+    ) * 1.2; 
 
     var centerX = box.minX + width / 2;
     var centerY = box.minY + height / 1.05;
