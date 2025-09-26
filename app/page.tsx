@@ -70,16 +70,22 @@ function Konva() {
   const [lastPanPos, setLastPanPos] = useState({ x: 0, y: 0 });
   const pendingPoints = useRef<number[]>([]);
   
-   useEffect(() => {
-    if (transformerRef.current && selectedId !== null) {
-      const stage = transformerRef.current.getStage();
-      const selectedNode = stage?.findOne(`#${selectedId}`);
-      if (selectedNode) {
-        transformerRef.current.nodes([selectedNode]);
-        transformerRef.current.getLayer()?.batchDraw();
-      }
-    }
-  }, [selectedId, elements]);
+  useEffect(() => {
+  if (!transformerRef.current) return;
+
+  const stage = transformerRef.current.getStage();
+  if (!stage) return;
+
+  const selectedNode = selectedId ? stage.findOne(`#${selectedId}`) : null;
+
+  if (selectedNode) {
+    transformerRef.current.nodes([selectedNode]);
+  } else {
+    transformerRef.current.nodes([]);
+  }
+
+  transformerRef.current.getLayer()?.batchDraw();
+}, [selectedId, elements]);
 
   useEffect(() => {
     const handleClick = (e: Event) => {
@@ -136,12 +142,16 @@ function Konva() {
 
   useEffect(() => {
     const allLines: any = localStorage.getItem("lines");
-    if(allLines){
+    console.log("length",allLines.length)
+    if(allLines.length <= 2){
+      setFirst(true);
+    } else {
       setFirst(false);
+      console.log("alllines",allLines.length);
       setElements(JSON.parse(allLines));
     }
     setTheme(theme);
-  },[])
+  },[first])
 
   useEffect(() => {
     if(!socket) return;
@@ -994,17 +1004,18 @@ function Konva() {
                      />
                   )
                 }
+                return null;
               })}
 
               <Transformer
-      ref={transformerRef}
-      rotateEnabled={false}
-      enabledAnchors={["middle-left", "middle-right"]}
-      boundBoxFunc={(oldBox, newBox) => {
-        newBox.height = oldBox.height;
-        return newBox;
-      }}
-    />
+            ref={transformerRef}
+            rotateEnabled={false}
+            enabledAnchors={["middle-left", "middle-right"]}
+            boundBoxFunc={(oldBox, newBox) => ({
+              ...newBox,
+              height: oldBox.height, // lock height
+            })}
+          />
             </Layer>
         </Stage>
          )}
