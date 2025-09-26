@@ -142,7 +142,7 @@ function Konva() {
 
   useEffect(() => {
     const allLines: any = localStorage.getItem("lines");
-    if(!allLines) return;
+    if(!allLines) return
     if(allLines.length <= 2){
       setFirst(true);
     } else {
@@ -566,19 +566,19 @@ function Konva() {
     var scale = Math.max(
       containerWidth / width,
       containerHeight / height
-    ) * 0.1; 
+    ) * 0.4; 
 
-    var centerX = box.minX + width / 1.1;
-    var centerY = box.minY + height / 0.9;
+    var centerX = box.minX + width / 1.3;
+    var centerY = box.minY + height / 0.95;
   } else {
     console.log("laptop");
     var scale = Math.max(
      containerWidth / width,
      containerHeight / height
-    ) * 1.2; 
+    ) * 2; 
 
-    var centerX = box.minX + width / 2;
-    var centerY = box.minY + height / 1.05;
+    var centerX = box.minX + width / 2.5;
+    var centerY = box.minY + height / 1.5;
   }
 
   const newX = containerWidth / 3 - centerX * scale;
