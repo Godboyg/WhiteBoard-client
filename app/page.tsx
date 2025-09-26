@@ -142,7 +142,7 @@ function Konva() {
 
   useEffect(() => {
     const allLines: any = localStorage.getItem("lines");
-    console.log("length",allLines.length)
+    if(!allLines) return;
     if(allLines.length <= 2){
       setFirst(true);
     } else {
